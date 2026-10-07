@@ -4,7 +4,9 @@
 
 En este repositorio, el lanzador `JUGAR.cmd` y la build `web/` están en la raíz. GitHub Pages publica desde `main` y el archivo de entrada abre la build sin instalación. Las instrucciones con `../` de abajo se refieren al paquete original de entrega. Para reexportar un clon independiente, instala las plantillas oficiales Godot 4.4.1 y vacía las rutas de plantillas personalizadas en el preset Web; elige `web/index.html` como destino.
 
-Juego 2D de supervivencia con ratón: protege una torre de queso frente a ratas, carga el arco buscando el instante verde o arriesga sobrecarga para atravesar grupos. Fuente Godot 4.4.1 y GDScript; primera entrega para navegador.
+Juego 2D de supervivencia: protege una torre de queso frente a ratas, carga el arco buscando el instante verde o la ventana morada para atravesar grupos. Movimiento con ratón o WASD, disparo configurable y combate cuerpo a cuerpo. Fuente Godot 4.4.1 y GDScript; entrega para navegador.
+
+La fuente V2 está en la rama `feature/gameplay-polish-v2`; la publicación enlazada conserva V1 hasta completar la verificación web y publicar V2. El checkpoint `M13_baseline_v1` conserva V1. La build candidata se exporta desde esta fuente a `../web/`; no se declara publicada por tener tests aprobados.
 
 ## Jugar en Windows
 
@@ -17,23 +19,30 @@ No abras `web/index.html` como archivo local: la exportación necesita HTTP. Si 
 | Acción | Control |
 | --- | --- |
 | Apuntar | Mover el ratón dentro del campo |
-| Caminar | Clic izquierdo sobre el suelo |
-| Subir al queso | Clic izquierdo sobre la torre; el arquero se aproxima y sube |
-| Bajar | Clic izquierdo sobre el suelo |
-| Cargar arco | Mantener botón derecho |
-| Disparar | Soltar botón derecho |
+| Caminar | Clic a destino o WASD, seleccionable en Ajustes |
+| Subir al queso | Botón contrario al disparo sobre torre; se aproxima y sube. E también interactúa cerca en WASD |
+| Bajar | Botón de movimiento sobre suelo, E cerca o Espacio para bajar con dash |
+| Cargar arco | Mantener derecho o izquierdo, seleccionable en Ajustes |
+| Disparar | Soltar el botón de disparo elegido |
+| Golpe cuerpo a cuerpo | Botón central; barrido hacia cursor, sin munición |
+| Dash | Espacio; dirección de movimiento o cursor si estás quieto |
+| Pausa | Esc o botón II |
 | Comprar, reparar, elegir mejora o iniciar oleada | Clic izquierdo en la interfaz |
-| Reducir efectos, silenciar o consultar ayuda | Botones laterales |
+| Controles, música/SFX separados, efectos y ayuda | Ajustes del menú principal o de pausa; preferencias persistentes |
 
-Puedes caminar mientras cargas, inicialmente al 65 % de velocidad. Verde: crítico y rotura de protección enemiga. Rojo: mayor potencia y penetración, más dispersión y riesgo de romper cuerda. La cuerda se recupera sola; no hay cancelación manual de carga. Desde el queso eres inmune, pero la torre recibe inicialmente un 50 % más de daño.
+Puedes caminar mientras cargas, inicialmente al 65 % de velocidad. La secuencia es naranja → verde → rojo → morado → rojo breve → rotura garantizada. Verde: crítico que rompe protección. Morado: segundo instante especial, flecha espectral de franja constante que atraviesa grupos, respeta protección y consume una flecha. No hay rotura aleatoria antes del límite; la cuerda se recupera sola con aviso READY. No hay cancelación manual de carga. Dash conserva carga y tiene invulnerabilidad breve inicial; la torre y el borde bloquean su recorrido. Melee empuja múltiples ratas, funciona sin flechas y con arco roto, pero no mientras cargas.
+
+Desde el queso eres inmune, pero la torre recibe inicialmente un 50 % más de daño y no recoges recursos. La pausa congela carga, proyectiles, dash y reaparición. Si sueltas el disparo durante pausa, al continuar pulsa y suelta de nuevo para resolver esa carga; no se dispara automáticamente ni empieza desde cero. Perder foco pausa la partida.
 
 Empieza la primera oleada con el botón lateral. Comprar flechas y reparar no pausa el combate. Al completar una oleada eliges una mejora gratuita, compras o reparas y comienzas la siguiente cuando quieras. Si el arquero muere revive en 2,5 s mientras quede queso. Si el queso se destruye, termina la partida y aparece el botón para volver a jugar. Supervivencia infinita, sin pantalla de victoria.
 
 ## Progresión y guardado
 
-La tienda inicial vende 10 flechas por 6 monedas y recupera hasta 30 puntos de queso por 12 monedas. Bajas y oleadas dan monedas. Doce mejoras, organizadas en arco, flechas, movilidad y torre, se ofrecen según requisitos y rangos disponibles. Consulta todos sus efectos en `docs/BALANCE.md`; el árbol puede consultarse entre oleadas.
+La tienda inicial vende 10 flechas por 6 monedas y recupera hasta 30 puntos de queso por 12 monedas. Las bajas dejan monedas físicas: recógelas en suelo; el premio de oleada sigue siendo automático. Bajas melee dejan además flechas garantizadas y disparos que no tocaron ningún enemigo dejan una flecha recuperable al terminar. Cargas bajas se clavan al final del indicador; verdes y superiores continúan por el área jugable. Los recursos permanecen entre oleadas hasta recogerlos. Puedes recuperarte con cero flechas y cero monedas mediante melee y recogida.
 
-Al perder se conservan automáticamente `floor(adquisiciones × clamp(monedas / 200, 0, 1))` mejoras. Se conserva el prefijo histórico, contando cada rango y respetando requisitos. Cero monedas conserva cero; 200 o más conserva todo. El dinero se reinicia y cada partida empieza con 10 monedas y 40 flechas. El guardado local usa `user://cheesekeep.json`; en web pertenece al almacenamiento del navegador y a la dirección de origen. Cambiar navegador, puerto o borrar almacenamiento puede dejar el progreso anterior inaccesible. El guardado de retención ocurre al finalizar la partida; cerrar antes no guarda las nuevas adquisiciones.
+Veinte mejoras distintas, con cuarenta rangos adquiribles en total, se organizan en arco, flechas, movilidad/melee, recogida y torre. Se ofrecen según requisitos y rangos disponibles; las ramas son combinables. Una elección gratuita por oleada. Consulta sus efectos en `data/upgrades.json` y `docs/BALANCE.md`; el árbol muestra enlaces entre requisitos y puede consultarse entre oleadas.
+
+Al perder se conservan automáticamente `floor(adquisiciones × clamp(monedas / 200, 0, 1))` mejoras. Se conserva el prefijo histórico, contando cada rango y respetando requisitos. Cero monedas conserva cero; 200 o más conserva todo. Solo cuentan monedas recogidas y premios automáticos, no las del suelo. El dinero se reinicia y cada partida empieza con 10 monedas y 40 flechas. El guardado local usa `user://cheesekeep.json`; en web pertenece al almacenamiento del navegador y a la dirección de origen. Cambiar navegador, puerto o borrar almacenamiento puede dejar el progreso anterior inaccesible. V2 conserva IDs de mejoras V1 y migra sus guardados; guarda preferencias por separado del progreso retenido. Retención ocurre al finalizar la partida; cerrar o abandonar al menú antes no guarda las nuevas adquisiciones.
 
 ## Abrir y modificar la fuente
 
@@ -49,8 +58,13 @@ La entrega incluye plantillas web sin hilos de Godot 4.4.1 en `../export_templat
 
 ## Pruebas y límites
 
-Los diagnósticos se ejecutan con Godot, por ejemplo `godot --headless --path . --script tests/enemy_variants_tests.gd`. Los informes `docs/CORE_GATE.md`, `docs/MVP_PLAYTEST.md`, `docs/TEST_CORE.md`, `docs/TEST_SYSTEMS.md`, `docs/TEST_INTEGRATION.md` y las revisiones independientes registran el alcance real de las comprobaciones. Consulte esos informes para evidencia, defectos y limitaciones; los tests no prueban por sí solos diversión, calidad de audio ni rendimiento sostenido.
+Los diagnósticos se ejecutan con Godot, por ejemplo `godot --headless --path . --script tests/v2_integration.gd`. V2 registra 530 comprobaciones sin fallos, suite Enemy/Economy aprobada y 50 casos de geometría; véase `docs/TEST_V2.md` y `docs/CODE_REVIEW_V2.md`. Las pruebas incluyen recuperación sin recursos, pausa/foco, cinco oleadas con jefe, migración y límites de objetos. Los informes V1 `docs/CORE_GATE.md`, `docs/MVP_PLAYTEST.md`, `docs/TEST_CORE.md`, `docs/TEST_SYSTEMS.md` y `docs/TEST_INTEGRATION.md` se conservan como historia. Los tests no prueban por sí solos diversión, calidad de audio ni rendimiento web sostenido.
 
-Esta entrega mantiene un alcance compacto: cinco tipos de ratas (básica, rápida, escudada, pesada y jefe), doce mejoras y una arena. No incluye campaña, multijugador, inventario ni ejecutable nativo. El balance de largas sesiones y las invocaciones de jefes requieren seguimiento adicional. Los límites de objetos no equivalen a una garantía de FPS.
+Esta entrega mantiene un alcance compacto: cinco tipos de ratas (básica, rápida, escudada, pesada y jefe), veinte mejoras y una arena. No incluye campaña, multijugador, inventario ni ejecutable nativo. El balance de largas sesiones y las invocaciones de jefes requieren seguimiento adicional. Los límites de objetos y mediciones CPU headless no equivalen a una garantía de FPS web. El gate de navegador, rendimiento sostenido y valoración humana de V2 permanece pendiente hasta documentar su ejecución.
 
 La documentación de diseño y mantenimiento está en `docs/`: GAME_VISION, SPEC, ARCHITECTURE, PLAN, PLAN_REVIEW, PROGRESS y BALANCE.
+
+## Cambios de versión
+
+- V2: aim estable, vuelo independiente del indicador para verde+, huella sólida compartida, cámara suave; melee/dash, recursos físicos y recuperación sin munición; carga morada y rotura determinista; controles configurables, preferencias persistentes, menú/pausa/ayuda/splash y árbol con veinte mejoras. Implementación y tests técnicos completos; gates web y experiencia humana pendientes.
+- V1 / M13: versión publicada preservada, combate de ratón, doce mejoras, monedas por baja automáticas, carga roja con riesgo aleatorio y vuelo limitado por indicador. Sus informes originales siguen en `docs/`.
