@@ -14,6 +14,15 @@ func earn(amount: int) -> void:
 	if amount > 0:
 		coins += amount
 
+func collect(kind: String, amount: int) -> bool:
+	if amount <= 0 or kind not in ["coin", "arrow"]:
+		return false
+	if kind == "coin":
+		coins += amount
+	else:
+		ammo += amount
+	return true
+
 func spend(amount: int) -> bool:
 	if amount < 0 or coins < amount:
 		return false
