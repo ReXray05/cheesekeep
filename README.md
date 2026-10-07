@@ -1,5 +1,9 @@
 # Cheesekeep — La última corteza
 
+**[JUGAR EN EL NAVEGADOR](https://rexray05.github.io/cheesekeep/)** · [Repositorio](https://github.com/ReXray05/cheesekeep)
+
+En este repositorio, el lanzador `JUGAR.cmd` y la build `web/` están en la raíz. GitHub Pages publica desde `main` y el archivo de entrada abre la build sin instalación. Las instrucciones con `../` de abajo se refieren al paquete original de entrega. Para reexportar un clon independiente, instala las plantillas oficiales Godot 4.4.1 y vacía las rutas de plantillas personalizadas en el preset Web; elige `web/index.html` como destino.
+
 Juego 2D de supervivencia con ratón: protege una torre de queso frente a ratas, carga el arco buscando el instante verde o arriesga sobrecarga para atravesar grupos. Fuente Godot 4.4.1 y GDScript; primera entrega para navegador.
 
 ## Jugar en Windows
