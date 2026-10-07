@@ -96,3 +96,22 @@ Al perder: `K = floor(N × clamp(monedas / 200, 0, 1))`, donde N es el número d
 ## Límites y seguimiento
 
 Máximos de configuración: 80 enemigos, 50 flechas, 80 textos flotantes; no son medidas de FPS ni garantías de rendimiento. Validar el equilibrio entre comprar/reparar y ahorrar, supervivencia avanzada, facilidad del verde y ventajas relativas de crítico y rojo mediante sesiones adicionales. No se fija duración promedio ni se declara diversión comprobada por estos números.
+# Balance V2 — punto de partida, pendiente de playtest
+
+Reglas elegidas documentadas en SPEC/GAME_VISION V2; cifras de abajo son ajustables. Preservar datos históricos V1 como comparación, no usar RNG de rotura.
+
+| Sistema | Inicial V2 |
+| --- | --- |
+| Verde | 0,85–0,98s, crítico rompe protección |
+| Morado | 1,55–1,67s, daño28, velocidad420, semiancho18, atraviesa todas una vez |
+| Rotura | 1,85s garantizada, recuperación1,5s, aviso rojo previo |
+| Melee | daño12, alcance32, ángulo110°, cooldown0,45s, animación0,18s, empuje14 |
+| Recompensa melee | monedas normales físicas y 2 flechas físicas garantizadas |
+| Dash | 75 unidades /0,18s /1s cooldown, iFrames0,08s, corrección ligera |
+| Recogida | radio12 suelo, ampliable por árbol, sin desaparición entre oleadas |
+| Economía | inicio40 flechas/10monedas, pack10precio6, reparación30precio12 |
+
+No hay bonus por estar fuera; recogida a tiempo, melee y reducción de presión a torre son incentivos. Premio de oleada automático sigue disponible; monedas de bajas no suman saldo hasta recoger. Magnetismo no debe permitir recoger desde torre ni eliminar todas las excursiones. Flechas recuperables no deben duplicarse por impactos/salida/reinicio.
+
+Verificar protección: melee debe poder acabar incluso una rata blindada con ceroammo; si tarda demasiado para recuperar la partida, ajustar daño mínimo/knockback/cooldown conservando especialidad verde. Morado moderado y daño una vez por ID; su potencia grupal requiere límites de ancho, no límite arbitrario de enemigos. Ajustar después sesiones reales y ensayo cinco oleadas+jefe, no considerar diversión certificada por bot.
+
