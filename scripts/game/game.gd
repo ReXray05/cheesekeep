@@ -191,8 +191,9 @@ func _process(delta: float) -> void:
 		telemetry_timer = 0.1
 		var telemetry: Dictionary = _status_data(shot_state)
 		telemetry.erase("bow")
-		telemetry.merge({"charge":bow.charge_time,"state":shot_state.state_label,"kills":score,"arrows":arrows.size(),"player_x":player.position.x,"player_y":player.position.y,"enemies":enemies.size()})
-		JavaScriptBridge.eval("window.cheesekeepState = " + JSON.stringify(telemetry) + ";",true)
+		telemetry.merge({"charge":bow.charge_time,"state":shot_state.state_label,"kills":score,"arrows":arrows.size(),"player_x":player.position.x,"player_y":player.position.y,"enemies":enemies.size(),"fps":Engine.get_frames_per_second(),"nodes":int(Performance.get_monitor(Performance.OBJECT_NODE_COUNT)),"ticks":Time.get_ticks_msec()})
+		var serialized: String = JSON.stringify(telemetry)
+		JavaScriptBridge.eval("window.cheesekeepState = " + serialized + "; document.querySelector('canvas').setAttribute('data-qa-state',JSON.stringify(window.cheesekeepState));",true)
 
 func _move(point: Vector2) -> void:
 	player.go_to(point)
@@ -358,7 +359,7 @@ func _apply_upgrades(full_health: bool) -> void:
 func _buy_ammo() -> void:
 	if prototype or phase == "OVER":
 		return
-	_toast("+10 flechas" if economy.buy_ammo() else "Faltan monedas para comprar flechas.",2)
+	_toast("+%d flechas" % int(config.economy.ammo_pack) if economy.buy_ammo() else "Faltan monedas para comprar flechas.",2)
 
 func _repair() -> void:
 	if prototype or phase == "OVER":
@@ -381,6 +382,8 @@ func _game_over() -> void:
 			arrow.queue_free()
 	arrows.clear()
 	var retained: Array = Persistence.retain(upgrades.history,economy.coins,int(config.economy.retention_coins))
-	Persistence.save(retained)
+	var saved: bool = Persistence.save(retained)
 	result = {"wave":wave_manager.wave,"kills":score,"elapsed":elapsed,"coins":economy.coins,"ratio":clampf(float(economy.coins)/float(config.economy.retention_coins),0,1),"retained":retained.size(),"total":upgrades.history.size()}
 	hud.show_game_over(result)
+	if not saved:
+		_toast("El navegador no ha podido guardar las mejoras. Revisa el almacenamiento local.",8)
