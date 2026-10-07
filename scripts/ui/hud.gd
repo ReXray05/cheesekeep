@@ -18,6 +18,8 @@ var _hp_label: Label
 var _cheese_label: Label
 var _status: Label
 var _charge_label: Label
+var _charge_hint: Label
+var _help: Label
 var _charge: ChargeGauge
 var _mount_label: Label
 var _ammo_buy: Button
@@ -31,10 +33,13 @@ var _toast_left: float = 0.0
 class ChargeGauge extends Control:
 	var time: float = 0.0
 	var tint: Color = Color("ff9b42")
+	var sweet_start: float = 0.85
+	var sweet_end: float = 0.98
+	var max_time: float = 2.2
 	func _draw() -> void:
 		draw_rect(Rect2(Vector2.ZERO, size), Color("233139"))
-		draw_rect(Rect2(0, 0, size.x * clampf(time / 2.2, 0, 1), size.y), tint)
-		var green: Rect2 = Rect2(size.x * 0.85 / 2.2, 0, size.x * 0.13 / 2.2, size.y)
+		draw_rect(Rect2(0, 0, size.x * clampf(time / max_time, 0, 1), size.y), tint)
+		var green: Rect2 = Rect2(size.x * sweet_start / max_time, 0, size.x * (sweet_end - sweet_start) / max_time, size.y)
 		draw_rect(green, Color("91ed70"), false, 2.0)
 
 func setup(is_prototype: bool) -> void:
@@ -72,11 +77,11 @@ func setup(is_prototype: bool) -> void:
 	_charge.custom_minimum_size = Vector2(0, 14)
 	_charge.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	left.add_child(_charge)
-	_title(left, "VERDE 0,85–0,98 s: crítico\nROJO: penetra; puede romper", 12, MUTED)
+	_charge_hint = _title(left, "VERDE 0,85–0,98 s: crítico\nROJO: penetra; puede romper", 12, MUTED)
 	_title(left, "IZQUIERDO: caminar\nDERECHO: mantener carga\nSOLTAR DERECHO: disparar\nTORRE / SUELO: subir / bajar", 13, MUTED)
-	var help: Label = _title(left, "Cargar ralentiza.\nTorre: inmune; queso +50 %.\nTienda sin pausa.\nEntre oleadas: elige y compra.", 12, MUTED)
-	help.visible = false
-	var tutorial: Button = _button(left, "AYUDA", func(): help.visible = not help.visible)
+	_help = _title(left, "Cargar ralentiza.\nTorre: inmune; queso +50 %.\nTienda sin pausa.\nEntre oleadas: elige y compra.", 12, MUTED)
+	_help.visible = false
+	var tutorial: Button = _button(left, "AYUDA", func(): _help.visible = not _help.visible)
 	tutorial.tooltip_text = "Mostrar u ocultar consejos"
 	var right: VBoxContainer = _panel(936)
 	_title(right, "EL ARCO" if _prototype else "PROVISIONES", 21, CHEESE)
@@ -118,20 +123,30 @@ func update_status(data: Dictionary) -> void:
 		_status.text = "CAMPO DE PRUEBAS\nRatas: %d" % int(data.get("kills", 0))
 	else:
 		_status.text = "OLEADA %d\nFlechas: %d\nMonedas: %d\nBajas: %d · %s" % [int(data.get("wave", 1)), int(data.get("ammo", 0)), int(data.get("coins", 0)), int(data.get("kills", 0)), _time_text(float(data.get("elapsed", 0)))]
-	_mount_label.text = "REFUGIO: QUESO +50 % DAÑO" if mounted else ""
+	var mounted_extra: int = roundi((float(data.get("mounted_damage", 1.5)) - 1.0) * 100.0)
+	_mount_label.text = "REFUGIO: QUESO %+d %% DAÑO" % mounted_extra if mounted else ""
+	_help.text = "Cargar ralentiza.\nTorre: inmune; queso %+d %%.\nTienda sin pausa.\nEntre oleadas: elige y compra." % mounted_extra
 	if not alive: _mount_label.text = "REVIVES EN %.1f s" % float(data.get("respawn_left", 0))
 	var bow: Dictionary = data.get("bow", {})
 	_charge_label.text = "%s · %.2f s" % [str(bow.get("state_label", "LISTO")), float(bow.get("charge", 0))]
 	var color: Color = bow.get("color", CHEESE)
 	_charge_label.add_theme_color_override("font_color", color)
 	_charge.time = float(bow.get("charge", 0))
+	_charge.sweet_start = maxf(0.0, float(data.get("sweet_start", 0.85)))
+	_charge.sweet_end = maxf(_charge.sweet_start, float(data.get("sweet_end", 0.98)))
+	_charge.max_time = maxf(_charge.sweet_end + 0.01, float(data.get("overcharge_peak", 2.2)))
+	_charge_hint.text = "VERDE %.2f–%.2f s: crítico\nROJO: penetra; puede romper" % [_charge.sweet_start, _charge.sweet_end]
 	_charge.tint = color
 	_charge.queue_redraw()
 	if str(bow.get("state_label", "")) == "REPARANDO":
 		_charge_label.text = "REPARANDO · %.1f s" % float(bow.get("cooldown", 0))
 	if not _prototype:
-		_ammo_buy.disabled = int(data.get("coins", 0)) < 6 or phase == "OVER"
-		_repair.disabled = int(data.get("coins", 0)) < 12 or _cheese.value >= _cheese.max_value or phase == "OVER"
+		var ammo_price: int = int(data.get("ammo_price", 6))
+		var repair_price: int = int(data.get("repair_price", 12))
+		_ammo_buy.text = "%d FLECHAS · %d MONEDAS" % [int(data.get("ammo_pack", 10)), ammo_price]
+		_repair.text = "+%d QUESO · %d MONEDAS" % [int(data.get("repair_hp", 30)), repair_price]
+		_ammo_buy.disabled = int(data.get("coins", 0)) < ammo_price or phase == "OVER"
+		_repair.disabled = int(data.get("coins", 0)) < repair_price or _cheese.value >= _cheese.max_value or phase == "OVER"
 		_next.visible = phase == "PREP" or phase == "CHOICE"
 		_next.disabled = phase != "PREP"
 		_next.text = "ELIGE UNA MEJORA" if phase == "CHOICE" else "EMPEZAR OLEADA"
