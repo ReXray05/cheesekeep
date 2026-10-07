@@ -8,6 +8,11 @@ const Enemy = preload("res://scripts/enemies/enemy_controller.gd")
 const Player = preload("res://scripts/player/player_controller.gd")
 const Router = preload("res://scripts/input/input_controller.gd")
 const Ground = preload("res://scripts/game/world_visuals.gd")
+const HUD = preload("res://scripts/ui/hud.gd")
+const Wave = preload("res://scripts/waves/wave_manager.gd")
+const Economy = preload("res://scripts/economy/economy_manager.gd")
+const Upgrades = preload("res://scripts/upgrades/upgrade_manager.gd")
+const Persistence = preload("res://scripts/systems/persistence.gd")
 
 @export var prototype: bool = true
 var world: Node2D
@@ -21,8 +26,6 @@ var ground: Node2D
 var router: Node
 var enemies: Array[Node2D] = []
 var arrows: Array[Node2D] = []
-var status: Label
-var charge_label: Label
 var message: Label
 var score: int = 0
 var elapsed: float = 0.0
@@ -30,16 +33,31 @@ var toast_time: float = 0.0
 var aim: Vector2 = Vector2.RIGHT
 var config: Dictionary
 var field: SubViewportContainer
-var left: VBoxContainer
-var right: VBoxContainer
+var hud: Control
+var wave_manager: Node
+var economy: RefCounted
+var upgrades: RefCounted
+var base_config: Dictionary
+var phase: String = "PREP"
+var tower_hp: float = 300.0
+var tower_max: float = 300.0
+var respawn_left: float = 0.0
+var qa_mode: bool = false
+var effects_enabled: bool = true
+var shake: float = 0.0
+var result: Dictionary = {}
+var telemetry_timer: float = 0.0
 
 func _ready() -> void:
 	config = JSON.parse_string(FileAccess.get_file_as_string("res://data/balance.json"))
+	base_config = config.duplicate(true)
+	qa_mode = OS.has_feature("web") and bool(JavaScriptBridge.eval("new URLSearchParams(location.search).has('qa')",true))
 	_build_screen()
 	world = Node2D.new()
+	world.y_sort_enabled = true
 	viewport.add_child(world)
 	ground = Ground.new()
-	ground.z_index = -10
+	ground.z_index = 0
 	world.add_child(ground)
 	player = Player.new()
 	world.add_child(player)
@@ -53,7 +71,7 @@ func _ready() -> void:
 	bow.snapped.connect(_snapped)
 	indicator = Indicator.new()
 	indicator.bow = bow
-	indicator.z_index = -1
+	indicator.z_index = -100
 	world.add_child(indicator)
 	bow_art = BowArt.new()
 	bow_art.bow = bow
@@ -65,43 +83,31 @@ func _ready() -> void:
 	router.move_requested.connect(_move)
 	router.start_requested.connect(_begin)
 	router.release_requested.connect(_release)
-	_spawn_dummy()
-	_toast("Izquierdo: moverse · Derecho: tensar y soltar",8.0)
+	if prototype:
+		_spawn_dummy()
+		_toast("Izquierdo: moverse · Derecho: tensar y soltar",8.0)
+	else:
+		economy = Economy.new()
+		economy.setup(config.economy)
+		upgrades = Upgrades.new()
+		upgrades.setup(Persistence.load_history())
+		_apply_upgrades(true)
+		player.tower_enabled = true
+		player.position = Vector2(0,45)
+		player.destination = player.position
+		ground.tower_enabled = true
+		wave_manager = Wave.new()
+		add_child(wave_manager)
+		wave_manager.spawn_requested.connect(_spawn_enemy)
+		wave_manager.completed.connect(_wave_completed)
+		_toast("¡Protege el queso!\nInicia la primera oleada cuando quieras.",8.0)
 
 func _build_screen() -> void:
-	var ui_theme: Theme = Theme.new()
-	ui_theme.default_font_size = 16
-	var normal: StyleBoxFlat = StyleBoxFlat.new()
-	normal.bg_color = Color("273a42")
-	normal.border_color = Color("537068")
-	normal.set_border_width_all(1)
-	normal.content_margin_left = 10
-	normal.content_margin_right = 10
-	normal.content_margin_top = 10
-	normal.content_margin_bottom = 10
-	ui_theme.set_stylebox("normal","Button",normal)
-	var hover: StyleBoxFlat = normal.duplicate()
-	hover.bg_color = Color("42685b")
-	ui_theme.set_stylebox("hover","Button",hover)
-	var pressed: StyleBoxFlat = normal.duplicate()
-	pressed.bg_color = Color("b48242")
-	ui_theme.set_stylebox("pressed","Button",pressed)
-	theme = ui_theme
 	var background: ColorRect = ColorRect.new()
 	background.color = Color("101a23")
 	background.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	background.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(background)
-	left = _panel(Vector2(0,0),Vector2(216,720))
-	_title(left,"CHEESE\nKEEP",32,Color("ffd775"))
-	_title(left,"LA ÚLTIMA CORTEZA",12,Color("83ab9a"))
-	_spacer(left,20)
-	_title(left,"CAMPO DE PRUEBAS",14,Color("f8d57d"))
-	status = _title(left,"",17,Color("e9e6d1"))
-	_spacer(left,15)
-	charge_label = _title(left,"",16,Color("f8d57d"))
-	_spacer(left,15)
-	_title(left,"IZQUIERDO\nCaminar al punto\n\nDERECHO\nMantener: cargar\nSoltar: disparar",14,Color("a6bfb1"))
 	field = SubViewportContainer.new()
 	field.position = Vector2(216,0)
 	field.size = Vector2(720,720)
@@ -115,52 +121,23 @@ func _build_screen() -> void:
 	viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
 	viewport.handle_input_locally = false
 	field.add_child(viewport)
-	right = _panel(Vector2(936,0),Vector2(216,720))
-	_title(right,"EL ARCO",22,Color("ffd775"))
-	_title(right,"NARANJA\nCorto, impreciso\n\nVERDE\nCrítico: ¡suelta!\n\nROJO\nPenetra, pero arriesga\nrotura de cuerda",14,Color("b7c6b1"))
-	_spacer(right,25)
-	_button(right,"REINICIAR PRUEBA",_reset_prototype)
-	_spacer(right,20)
-	message = _title(right,"",14,Color("ffd775"))
-
-func _panel(at: Vector2, dimensions: Vector2) -> VBoxContainer:
-	var margin: MarginContainer = MarginContainer.new()
-	margin.position = at
-	margin.size = dimensions
-	for side in ["left","right","top","bottom"]:
-		margin.add_theme_constant_override("margin_"+side,18)
-	add_child(margin)
-	var box: VBoxContainer = VBoxContainer.new()
-	box.add_theme_constant_override("separation",12)
-	margin.add_child(box)
-	return box
-
-func _title(box: VBoxContainer, text: String, font_size: int, color: Color) -> Label:
-	var label: Label = Label.new()
-	label.text = text
-	label.add_theme_font_size_override("font_size",font_size)
-	label.add_theme_color_override("font_color",color)
-	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	box.add_child(label)
-	return label
-
-func _spacer(box: VBoxContainer, height: float) -> void:
-	var spacer: Control = Control.new()
-	spacer.custom_minimum_size.y = height
-	box.add_child(spacer)
-
-func _button(box: VBoxContainer, text: String, action: Callable) -> Button:
-	var button: Button = Button.new()
-	button.text = text
-	button.add_theme_font_size_override("font_size",14)
-	button.pressed.connect(action)
-	box.add_child(button)
-	return button
+	hud = HUD.new()
+	add_child(hud)
+	hud.setup(prototype)
+	hud.buy_ammo_requested.connect(_buy_ammo)
+	hud.repair_requested.connect(_repair)
+	hud.next_wave_requested.connect(_next_wave)
+	hud.upgrade_requested.connect(_choose_upgrade)
+	hud.restart_requested.connect(_reset_prototype)
+	hud.effects_toggled.connect(func(value: bool) -> void: effects_enabled = value)
+	hud.audio_toggled.connect(func(_value: bool) -> void: pass)
+	message = hud.message
 
 func _process(delta: float) -> void:
 	if not is_instance_valid(player):
 		return
-	elapsed += delta
+	if phase != "OVER":
+		elapsed += delta
 	toast_time -= delta
 	if toast_time <= 0.0:
 		message.text = ""
@@ -169,20 +146,24 @@ func _process(delta: float) -> void:
 		if vector.length() > 1.0:
 			aim = vector.normalized()
 	player.direction = aim
-	bow.tick(delta)
+	if phase != "OVER":
+		bow.tick(delta)
 	var shot_state: Dictionary = bow.snapshot()
-	player.tick(delta,shot_state.charging)
+	if phase != "OVER":
+		player.tick(delta,shot_state.charging)
 	camera.position = player.position
 	indicator.position = player.bow_origin()
 	indicator.direction = aim
 	indicator.queue_redraw()
 	bow_art.position = player.bow_origin()
 	bow_art.aim = aim
-	bow_art.rotation = sin(elapsed * 65.0) * 0.09 * float(shot_state.get("excess",0.0))
+	bow_art.rotation = sin(elapsed * 65.0) * 0.09 * float(shot_state.get("excess",0.0)) if effects_enabled else 0.0
+	bow_art.visible = player.alive
+	indicator.visible = player.alive
 	bow_art.queue_redraw()
 	ground.target = player.destination
 	ground.show_target = player.moving
-	for arrow in arrows.duplicate():
+	for arrow in arrows.duplicate() if phase != "OVER" else []:
 		if is_instance_valid(arrow) and not arrow.is_queued_for_deletion():
 			arrow.tick(delta)
 			var screen: Vector2 = viewport.get_canvas_transform() * arrow.position
@@ -190,23 +171,50 @@ func _process(delta: float) -> void:
 				arrow.queue_free()
 	arrows = arrows.filter(func(a: Node2D) -> bool: return is_instance_valid(a) and not a.is_queued_for_deletion())
 	enemies = enemies.filter(func(e: Node2D) -> bool: return is_instance_valid(e) and not e.is_queued_for_deletion())
-	status.text = "BAJAS      %02d\nEN VUELO   %02d" % [score,arrows.size()]
-	charge_label.text = "%s\n%.2f s" % [shot_state.state_label,bow.charge_time]
-	charge_label.add_theme_color_override("font_color",shot_state.color)
-	if OS.has_feature("web") and prototype:
-		var telemetry: Dictionary = {"charge":bow.charge_time,"state":shot_state.state_label,"kills":score,"arrows":arrows.size(),"player_x":player.position.x,"player_y":player.position.y}
+	if not prototype and phase != "OVER":
+		for enemy in enemies.duplicate():
+			if not enemy.dead:
+				enemy.tick(delta,player.position,Vector2.ZERO,player.alive,player.mounted)
+		if phase != "OVER":
+			wave_manager.tick(delta,enemies.size())
+			if not player.alive:
+				respawn_left -= delta
+				if respawn_left <= 0.0:
+					player.revive()
+					_toast("¡El queso te devuelve a la vida!",2.0)
+	ground.tower_hp = tower_hp
+	ground.tower_max = tower_max
+	router.enabled = phase != "OVER" and player.alive
+	hud.update_status(_status_data(shot_state))
+	telemetry_timer -= delta
+	if OS.has_feature("web") and (prototype or qa_mode) and (shot_state.charging or telemetry_timer <= 0.0):
+		telemetry_timer = 0.1
+		var telemetry: Dictionary = _status_data(shot_state)
+		telemetry.erase("bow")
+		telemetry.merge({"charge":bow.charge_time,"state":shot_state.state_label,"kills":score,"arrows":arrows.size(),"player_x":player.position.x,"player_y":player.position.y,"enemies":enemies.size()})
 		JavaScriptBridge.eval("window.cheesekeepState = " + JSON.stringify(telemetry) + ";",true)
 
 func _move(point: Vector2) -> void:
 	player.go_to(point)
 
 func _begin() -> void:
+	if not player.alive or phase == "OVER":
+		return
+	if not prototype and economy.ammo <= 0:
+		_toast("Sin flechas: compra munición en el lateral.",3)
+		return
+	if arrows.size() >= int(config.limits.arrows):
+		return
 	router.captured = bow.begin_charge()
 
 func _release() -> void:
 	bow.release(aim)
 
 func _shoot(data: Dictionary) -> void:
+	if phase == "OVER" or not player.alive:
+		return
+	if not prototype and not economy.consume_arrow():
+		return
 	bow_art.kick()
 	var arrow: Node2D = Arrow.new()
 	world.add_child(arrow)
@@ -216,6 +224,8 @@ func _shoot(data: Dictionary) -> void:
 	_toast("¡CRÍTICO!" if data.critical else "Flecha liberada",1.0)
 
 func _segment(from: Vector2, to: Vector2, arrow: Node2D) -> void:
+	if phase == "OVER":
+		return
 	var candidates: Array[Dictionary] = []
 	for enemy in enemies:
 		if not is_instance_valid(enemy) or enemy.dead or arrow.hit_ids.has(enemy.get_instance_id()):
@@ -238,6 +248,7 @@ func _float_text(at: Vector2, text: String, color: Color) -> void:
 	label.position = at + Vector2(-8,-24)
 	label.add_theme_font_size_override("font_size",12)
 	label.add_theme_color_override("font_color",color)
+	label.z_index = 30
 	world.add_child(label)
 	var tween: Tween = create_tween()
 	tween.set_parallel(true)
@@ -266,3 +277,110 @@ func _toast(text: String,duration: float = 3.0) -> void:
 
 func _reset_prototype() -> void:
 	get_tree().reload_current_scene()
+
+func _status_data(shot_state: Dictionary) -> Dictionary:
+	return {"hp":player.hp,"max_hp":player.max_hp,"ammo":999 if prototype else economy.ammo,"coins":0 if prototype else economy.coins,"tower_hp":tower_hp,"tower_max":tower_max,"wave":0 if prototype else wave_manager.wave,"phase":phase,"kills":score,"mounted":player.mounted,"alive":player.alive,"respawn_left":maxf(0,respawn_left),"bow":shot_state,"elapsed":elapsed,"sweet_start":config.bow.sweet_start,"sweet_end":config.bow.sweet_end,"overcharge_peak":config.bow.overcharge_peak,"ammo_price":config.economy.ammo_price,"ammo_pack":config.economy.ammo_pack,"repair_price":config.economy.repair_price,"repair_hp":config.economy.repair_hp,"mounted_damage":config.tower.mounted_damage}
+
+func _spawn_enemy(kind: String, at: Vector2) -> void:
+	if phase == "OVER":
+		return
+	var enemy: Node2D = Enemy.new()
+	enemy.configure(kind,wave_manager.wave)
+	enemy.position = at
+	world.add_child(enemy)
+	enemy.attack.connect(_attacked)
+	enemy.died.connect(func(reward: int) -> void:
+		if phase == "OVER":
+			return
+		score += 1
+		economy.earn(reward)
+		_float_text(enemy.position,"+%d" % reward,Color("ffd775"))
+		enemy.queue_free())
+	enemies.append(enemy)
+
+func _attacked(target: String, amount: float) -> void:
+	if phase == "OVER":
+		return
+	if target == "tower":
+		var damage: float = amount * (float(config.tower.mounted_damage) if player.mounted else 1.0)
+		tower_hp = maxf(0.0,tower_hp - damage)
+		_float_text(Vector2(0,-18),"-%d" % int(damage),Color("ff757b"))
+		if tower_hp <= 0.0:
+			_game_over()
+	else:
+		if player.hurt(amount):
+			_float_text(player.position,"-%d" % int(amount),Color("ff757b"))
+			if not player.alive:
+				bow.reset()
+				router.reset()
+				respawn_left = float(config.player.respawn_time)
+				_toast("¡Caíste! Revives si el queso sigue en pie.",3)
+
+func _next_wave() -> void:
+	if prototype or phase != "PREP":
+		return
+	phase = "WAVE"
+	wave_manager.start()
+	_toast("OLEADA %d\n¡Las ratas vienen por todos lados!" % wave_manager.wave,3)
+
+func _wave_completed(number: int, reward: int) -> void:
+	if phase != "WAVE":
+		return
+	economy.earn(reward)
+	phase = "CHOICE"
+	var offers: Array = upgrades.offers()
+	if offers.is_empty():
+		phase = "PREP"
+		economy.earn(10)
+	else:
+		hud.show_offers(offers)
+	_toast("OLEADA %d COMPLETA\n+%d monedas · Elige una mejora gratis." % [number,reward],8)
+
+func _choose_upgrade(id: String) -> void:
+	if prototype or phase != "CHOICE":
+		return
+	if upgrades.acquire(id):
+		_apply_upgrades(false)
+		phase = "PREP"
+		hud.clear_offers()
+		_toast("Mejora adquirida.\nCompra, repara y comienza cuando quieras.",5)
+
+func _apply_upgrades(full_health: bool) -> void:
+	var old_max: float = tower_max
+	config = upgrades.rebuild(base_config)
+	bow.config = config.bow.duplicate(true)
+	player.speed = float(config.player.speed)
+	player.charging_slow = float(config.player.charging_slow)
+	player.max_hp = float(config.player.hp)
+	tower_max = float(config.tower.hp)
+	tower_hp = tower_max if full_health else minf(tower_max,tower_hp+maxf(0,tower_max-old_max))
+
+func _buy_ammo() -> void:
+	if prototype or phase == "OVER":
+		return
+	_toast("+10 flechas" if economy.buy_ammo() else "Faltan monedas para comprar flechas.",2)
+
+func _repair() -> void:
+	if prototype or phase == "OVER":
+		return
+	if tower_hp >= tower_max:
+		_toast("El queso ya está intacto.",2)
+	elif economy.spend(int(config.economy.repair_price)):
+		tower_hp = minf(tower_max,tower_hp + float(config.economy.repair_hp))
+		_toast("Queso reparado",2)
+	else:
+		_toast("Faltan monedas para reparar el queso.",2)
+
+func _game_over() -> void:
+	phase = "OVER"
+	wave_manager.active = false
+	bow.reset()
+	router.reset()
+	for arrow in arrows:
+		if is_instance_valid(arrow):
+			arrow.queue_free()
+	arrows.clear()
+	var retained: Array = Persistence.retain(upgrades.history,economy.coins,int(config.economy.retention_coins))
+	Persistence.save(retained)
+	result = {"wave":wave_manager.wave,"kills":score,"elapsed":elapsed,"coins":economy.coins,"ratio":clampf(float(economy.coins)/float(config.economy.retention_coins),0,1),"retained":retained.size(),"total":upgrades.history.size()}
+	hud.show_game_over(result)

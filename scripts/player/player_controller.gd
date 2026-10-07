@@ -21,7 +21,7 @@ func _ready() -> void:
 func go_to(point: Vector2) -> void:
 	if not alive:
 		return
-	wants_tower = tower_enabled and point.distance_to(Vector2.ZERO) < 24.0
+	wants_tower = tower_enabled and Rect2(-30,-34,60,62).has_point(point)
 	if wants_tower:
 		destination = Vector2.ZERO
 	else:
