@@ -11,3 +11,5 @@ Rendimiento web pendiente: telemetría independiente 1 FPS, simulación inferior
 Diseño: bot completa cinco oleadas y jefe con reglas reales; no demuestra diversión ni duración objetivo. Equilibrio de ahorro, reparación y munición pendiente de partidas humanas. Audio original validado técnicamente; audición pendiente.
 
 Veredicto: PASS técnico de reglas y ciclo integrado; prototipo jugable entregable. Gate de rendimiento y evaluación subjetiva abiertos.
+
+Comprobación posterior en navegador normal abierto por el lanzador: simulación 43,66 s frente a reloj 44,45 s; 23 FPS en preparación y 59 FPS tras clic de inicio (67 nodos, un enemigo). Esto confirma comportamiento cercano a tiempo real en primer plano y variación por contexto de ejecución. La prueba web con carga máxima sigue pendiente; no se mantiene 1 FPS como medida representativa de una partida normal.
