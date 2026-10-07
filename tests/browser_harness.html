@@ -1,0 +1,9 @@
+<!doctype html><html lang="es"><meta charset="utf-8"><title>Cheesekeep — Pruebas de entrada</title>
+<style>body{background:#101a23;color:#ffe4a0;font:16px monospace;margin:20px}button{padding:12px;margin:8px;background:#294b43;color:#fff;border:1px solid #78ac83}iframe{border:0;width:1152px;height:720px;display:block}</style>
+<h1>Pruebas del arco — eventos de ratón</h1>
+<p>Secuencias reproducibles. El juego recibe los eventos mousemove, mousedown y mouseup de su canvas.</p>
+<button onclick="shot(.3)">Disparo naranja 0,30 s</button><button onclick="shot(.91)">Disparo verde 0,91 s</button><button onclick="shot(1.6)">Disparo rojo 1,60 s</button><button onclick="shot(8)">Sobrecargar hasta rotura</button>
+<iframe id="game" src="../../web/index.html"></iframe>
+<p id="result">Preparado</p><script>
+function shot(seconds){const c=document.querySelector('iframe').contentDocument.querySelector('canvas'),r=c.getBoundingClientRect();const x=r.left+r.width*(756/1152),y=r.top+r.height*(350/720);const opts={bubbles:true,clientX:x,clientY:y,button:2,buttons:2};c.dispatchEvent(new MouseEvent('mousemove',opts));c.dispatchEvent(new MouseEvent('mousedown',opts));document.querySelector('#result').textContent='Cargando '+seconds+' s';setTimeout(()=>{c.dispatchEvent(new MouseEvent('mouseup',{...opts,buttons:0}));document.querySelector('#result').textContent='Liberado tras '+seconds+' s';},seconds*1000);}
+</script></html>
