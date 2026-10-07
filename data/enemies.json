@@ -1,0 +1,7 @@
+{
+  "basic": {"hp":30,"speed":29,"radius":9,"reward":3,"player_damage":10,"tower_damage":5,"attack_cooldown":0.9,"chase_radius":80,"color":"a88870"},
+  "runner": {"hp":18,"speed":55,"radius":7,"reward":4,"chase_radius":100,"color":"9ad4ba"},
+  "shield": {"hp":45,"speed":22,"radius":10,"reward":6,"armor":true,"color":"647080"},
+  "tank": {"hp":95,"speed":18,"radius":13,"reward":10,"color":"ba655d","charge_interval":4,"windup":0.55,"dash_speed":110,"dash_duration":0.4,"dash_tower":14,"dash_player":20},
+  "boss": {"hp":300,"speed":15,"radius":20,"armor":true,"reward":35,"player_damage":25,"tower_damage":18,"color":"a77ac1","charge_interval":4,"windup":1,"dash_speed":85,"dash_duration":0.65,"dash_tower":18,"dash_player":25,"summon_interval":6}
+}
