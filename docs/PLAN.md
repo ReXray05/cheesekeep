@@ -51,3 +51,26 @@ Paquete: proyecto Godot/source/assets, build web, README arranque/export/control
 ## Riesgos a revisar
 
 SubViewport/cámara/input y shake; captura derecha global/foco; compra sin movimiento ni pausa; muerte/rotura/gameover limpia charge; retención conserva prerrequisitos; límite de ratas/flechas/efectos en supervivencia infinita; núcleo gate antes de contenido; satisfacción subjetiva no se infiere de tests; templates usados deben coincidir con motor 4.4.1.
+# PLAN V2 — evolución incremental
+
+Entrevista cerrada; SPEC/GAME_VISION V2 vigentes. M13 baseline tag preserva eef11eb y main pública. Integración exclusivamente orquestador en feature/gameplay-polish-v2. No publicar cambios hasta RC y gates. Documentos V1 conservados como historia.
+
+| Hito | Entregable ejecutable | Gate |
+| --- | --- | --- |
+| M14 | Aim estable, vuelo verde+, torre geométrica y vía melee ceroammo | Centro/cursor, recorrido/recuperación, contacto360°, zeroammo/saldo |
+| M15 | Input abstracto, WASD/clic, botón tiro, ajustes versionados | Todas combinaciones, UI/foco/liberación, guardar/cargar |
+| M16 | MENU/PAUSED integrados, ayuda/ajustes | Congelación y reanudación de carga/dash/oleada, ninguna acción fantasma |
+| M17 | Dash parametrizado y señal de presentación | Dirección, giro limitado, sólidos, iFrames, cooldown |
+| M18–20 | Recursos físicos persistentes, melee, morado determinista | Recompensa única, ammo viable, multiobjetivo/protección, pickups sin duplicación |
+| M21–22 | Cámara separada, perfect/BREAK/READY/dash/melee | Aim coherente durante movimiento/montaje, eventos breves legibles |
+| M23–24 | Árbol ramificado combinable, UI vintage original, splash/título | Requisitos, guardados viejos, ofertas, HUD limpio y resoluciones |
+| M25 | Balance cinco oleadas+jefe y sesiones reales | Salir beneficia, arco principal, economía recuperable |
+| M26 | Revisión independiente técnica/diseño/performance | Sin altos conocidos, nodos acotados, medición web documentada |
+| M27 | Export web reproducible, fuente/assets/docs/README | Arranque navegador, segunda partida, ajustes/progreso, artefactos |
+
+Orden técnico ajustado: preparar contratos; Bow/Arrow y Player/Input en worktrees independientes; Enemy/Economy después de contratos de daño/recompensa; root integra M14/15/17–20 antes UI definitiva. Ceroammo depende melee (M19 adelantado para M14), no placeholder munición infinita. Pausa/menú root antes polish final. No implementar diez mecánicas sin ejecutar: cada rama entrega parcial runnable y smoke/test, root juega versión integrada y registra problemas/correcciones antes de siguiente integración.
+
+Propiedad propuesta: Bow/Arrow scripts/weapons, scripts/projectiles, data/balance secciónbow; Player/Input scripts/player, scripts/input, scripts/systems/persistence (+settings), configura secciónplayer; Enemy/Economy scripts/enemies, scripts/economy y pickups, secciónmelee/economy; root game.gd, UI, efectos, upgrades, project.godot y documentos. Archivo balance.json compartido: solo ROOT lo edita; agentes usan fallbacks y entregan claves/config propuestas. Tests propietario explícito cuando se lance. Cada agente commits propios worktree; root revisa diff y cherry-pick. Assets/escenas no compartidos salvoownership acordado. No editar scripts raíz desde agentes.
+
+Antes de implementar: ARCHITECTURE AGENT entrega contratos; PLAN CRITIC revisa input/charge/dash/softlock/pickups/árbol/cámara/protección; SCOPE GUARDIAN clasifica. Resolver altos en documentación. Antes release: CODE/GAME DESIGN/PERFORMANCE reviewers independientes, export4.4.1 sin hilos y pruebas web. No inferir experiencia humana a partir de bot.
+
