@@ -1,1 +1,3 @@
-.godot/\n*.tmp\nexport_templates/\n
+.godot/
+*.tmp
+export_templates/

@@ -1,0 +1,7 @@
+{
+  "bow": {"sweet_start":0.85,"sweet_end":0.98,"overcharge_peak":2.2,"cooldown":1.5,"damage_min":12,"damage_opt":34,"damage_max":50,"speed_min":190,"speed_opt":360,"speed_max":450,"range_min":65,"range_opt":210,"range_max":280,"width_min":42.5,"width_opt":3.5,"width_max":27.5,"crit_multiplier":1.5,"break_peak_rate":0.7},
+  "player": {"hp":100,"speed":100,"charging_slow":0.65,"respawn_time":2.5},
+  "tower": {"hp":300,"mounted_damage":1.5},
+  "economy": {"start_coins":10,"start_ammo":40,"ammo_pack":10,"ammo_price":6,"repair_hp":30,"repair_price":12,"retention_coins":200},
+  "limits": {"enemies":80,"arrows":50,"effects":80}
+}
