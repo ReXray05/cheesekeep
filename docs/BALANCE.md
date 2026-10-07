@@ -115,3 +115,32 @@ No hay bonus por estar fuera; recogida a tiempo, melee y reducción de presión 
 
 Verificar protección: melee debe poder acabar incluso una rata blindada con ceroammo; si tarda demasiado para recuperar la partida, ajustar daño mínimo/knockback/cooldown conservando especialidad verde. Morado moderado y daño una vez por ID; su potencia grupal requiere límites de ancho, no límite arbitrario de enemigos. Ajustar después sesiones reales y ensayo cinco oleadas+jefe, no considerar diversión certificada por bot.
 
+## Árbol V2 efectivo
+
+Fuente: `data/upgrades.json` de la candidata2d5aa57. **20 IDs distintos,40 rangos totales**:12 IDs V1 preservados y8 nuevos. La tabla V1 anterior es histórica; esta sustituye sus efectos incompatibles. Rebuild parte de bases y aplica rangos una vez, valida orden de ventanas y clamps; no acumula efectos al abrir UI. Ramas combinables, sin exclusividades.
+
+| ID / mejora | Requisito | Rangos | Efecto por rango |
+| --- | --- | ---: | --- |
+| fast_draw / Cuerda ligera | Ninguno | 3 | Verde inicio/fin, morado inicio/fin, rotura y pico rojo ×0,92; adelanta toda la secuencia |
+| damage / Punta afilada | Ninguno | 3 | Daño bajo/óptimo/rojo/espectral ×1,12 |
+| stride / Botas ligeras | Ninguno | 3 | Velocidad de marcha ×1,10 |
+| cheese / Queso curado | Ninguno | 3 | Vida máxima queso +45; se recupera incremento al adquirir |
+| precision / Pulso fino | fast_draw | 2 | Semianchos del cono normal ×0,75; no estrecha franja espectral |
+| steady_string / Trenza resistente | fast_draw | 3 | break_time +0,12s, prolonga rojo final antes de rotura garantizada; no RNG ni cambio del cooldown de recuperación |
+| piercing / Aguja de acero | damage | 2 | +1 impacto para flecha normal/roja; espectral ya ilimitada |
+| keen_edge / Golpe maestro | damage | 2 | Multiplicador crítico verde ×1,10 |
+| momentum / Disparo en marcha | stride | 3 | Factor de marcha cargando +0,08, máximo1 |
+| nimble / Paso de ratón | momentum | 2 | Velocidad de marcha ×1,15 |
+| repair / Remiendo sabroso | cheese | 3 | Reparación +10HP |
+| rind / Corteza firme | cheese | 3 | Multiplicador de daño queso montado ×0,90, mínimo1 |
+| spectral_corridor / Corredor fantasma | precision | 1 | Semiancho espectral ×1,50:18→27 |
+| spectral_window / Pulso espectral | steady_string | 1 | Fin de morado +0,10s y rotura +0,10s; conserva duración del rojo final |
+| sweep / Barrido de corteza | stride | 1 | Alcance melee +10 y ángulo +50°:32→42 /110→160° |
+| shove / Despejar el paso | sweep | 1 | Empuje melee ×2 y daño +6:14→28 /12→18 |
+| dash_chain / Paso fugaz | momentum | 1 | Cooldown dash ×0,72 y iFrames +0,04s:1→0,72 /0,08→0,12s |
+| magnet / Bolsillo magnético | Ninguno | 1 | Radio magnético +20:12→32; solo en suelo |
+| wide_collect / Manos llenas | magnet | 1 | Recogida +10 y magnetismo +12:12→22 /32→44 |
+| field_repair / Reserva de corteza | repair | 1 | Reparación +20HP y precio −3monedas, mínimo1; se suma a rangos de repair |
+
+Casos relevantes de migración: steady_string conserva ID/rango pero sustituye reducción probabilística de rotura por margen determinista; fast_draw conserva ID/rango y escala también ventanas moradas y límite de rotura. Pulso espectral extiende fin de morado y límite juntos, evitando consumir todo el rojo final. Estas especializaciones cambian corredor/tiempos/barrido/recogida; no añaden botones o recursos nuevos.
+

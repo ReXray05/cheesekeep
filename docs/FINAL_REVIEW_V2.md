@@ -24,6 +24,8 @@ Bot cinco oleadas+jefe:52 bajas,queso295,cinco excursiones y tres compras. Stres
 
 Evidencia comunicada por el orquestador, sobre build local HTTP en Brave automatizado: menú carga, nueva partida entra a PREP; disparo consume ammo40→39 y genera un pickup tras fallar; pausa/ajustes/reanudación permiten WASD y disparo izquierdo; aproximación a torre y segundo disparo dejan ammo38/dos pickups. No errores de consola reportados en ese recorrido. Esta evidencia está atribuida al orquestador; el reviewer no la ha reproducido mediante una sesión separada.
 
+Comprobación adicional comunicada al cierre: recarga web vuelve a MENU con WASD/disparo izquierdo guardados; símbolos decorativos corregidos siguen legibles. Esta observación cubre persistencia de esas preferencias tras recarga en el origen local; no certifica todas las claves ni retención de derrota web.
+
 **El entorno informa1FPS y simulación lenta incluso en PREP sin enemigos.** No se ha separado causa de juego, visibilidad/oclusiones del navegador, entorno automatizado o GPU. No atribuirlo exclusivamente al navegador ni certificar60FPS. El stress CPU headless no descarta un cuello de render, transporte o scheduling. Este resultado mantiene pendiente el gate de rendimiento real y hace improcedente declarar la experiencia web plenamente aprobada.
 
 El recorrido indicado no certifica audición, todas las combinaciones de controles bajo carga, partida humana completa, segunda derrota/reinicio, conservación de ajustes tras recarga web ni oclusión360° observada exhaustivamente. Las suites cubren esos contratos técnicos en diferente medida, pero no deben presentarse como interacción humana en navegador.
