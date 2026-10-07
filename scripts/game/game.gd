@@ -39,6 +39,7 @@ func _ready() -> void:
 	world = Node2D.new()
 	viewport.add_child(world)
 	ground = Ground.new()
+	ground.z_index = -10
 	world.add_child(ground)
 	player = Player.new()
 	world.add_child(player)
@@ -177,6 +178,7 @@ func _process(delta: float) -> void:
 	indicator.queue_redraw()
 	bow_art.position = player.bow_origin()
 	bow_art.aim = aim
+	bow_art.rotation = sin(elapsed * 65.0) * 0.09 * float(shot_state.get("excess",0.0))
 	bow_art.queue_redraw()
 	ground.target = player.destination
 	ground.show_target = player.moving
@@ -188,9 +190,12 @@ func _process(delta: float) -> void:
 				arrow.queue_free()
 	arrows = arrows.filter(func(a: Node2D) -> bool: return is_instance_valid(a) and not a.is_queued_for_deletion())
 	enemies = enemies.filter(func(e: Node2D) -> bool: return is_instance_valid(e) and not e.is_queued_for_deletion())
-	status.text = "ACERTADOS  %02d\nFLECHAS    %02d" % [score,arrows.size()]
+	status.text = "BAJAS      %02d\nEN VUELO   %02d" % [score,arrows.size()]
 	charge_label.text = "%s\n%.2f s" % [shot_state.state_label,bow.charge_time]
 	charge_label.add_theme_color_override("font_color",shot_state.color)
+	if OS.has_feature("web") and prototype:
+		var telemetry: Dictionary = {"charge":bow.charge_time,"state":shot_state.state_label,"kills":score,"arrows":arrows.size(),"player_x":player.position.x,"player_y":player.position.y}
+		JavaScriptBridge.eval("window.cheesekeepState = " + JSON.stringify(telemetry) + ";",true)
 
 func _move(point: Vector2) -> void:
 	player.go_to(point)
@@ -202,6 +207,7 @@ func _release() -> void:
 	bow.release(aim)
 
 func _shoot(data: Dictionary) -> void:
+	bow_art.kick()
 	var arrow: Node2D = Arrow.new()
 	world.add_child(arrow)
 	arrow.setup(player.bow_origin(),data)
