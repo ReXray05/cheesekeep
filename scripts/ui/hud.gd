@@ -8,10 +8,13 @@ signal restart_requested
 signal effects_toggled(enabled: bool)
 signal audio_toggled(enabled: bool)
 signal tree_requested
+signal tree_closed
 
-const CHEESE: Color = Color("ffd775")
-const MUTED: Color = Color("a6bfb1")
-const PixelFont = preload("res://assets/fonts/PressStart2P-Regular.ttf")
+const CHEESE: Color = Color("20242a")
+const MUTED: Color = Color("343b46")
+const Vintage = preload("res://scripts/ui/vintage_theme.gd")
+const SkillTree = preload("res://scripts/ui/skill_tree.gd")
+
 var message: Label
 var _prototype: bool = false
 var _hp: ProgressBar
@@ -21,6 +24,8 @@ var _cheese_label: Label
 var _status: Label
 var _charge_label: Label
 var _charge_hint: Label
+var _controls: Label
+var _offered_ids: Array = []
 var _help: Label
 var _charge: ChargeGauge
 var _mount_label: Label
@@ -40,58 +45,46 @@ class ChargeGauge extends Control:
 	var tint: Color = Color("ff9b42")
 	var sweet_start: float = 0.85
 	var sweet_end: float = 0.98
-	var max_time: float = 2.2
+	var spectral_start: float = 1.55
+	var spectral_end: float = 1.67
+	var max_time: float = 1.85
 	func _draw() -> void:
 		draw_rect(Rect2(Vector2.ZERO, size), Color("233139"))
 		draw_rect(Rect2(0, 0, size.x * clampf(time / max_time, 0, 1), size.y), tint)
 		var green: Rect2 = Rect2(size.x * sweet_start / max_time, 0, size.x * (sweet_end - sweet_start) / max_time, size.y)
 		draw_rect(green, Color("91ed70"), false, 2.0)
+		var purple: Rect2 = Rect2(size.x * spectral_start / max_time, 0, size.x * (spectral_end - spectral_start) / max_time, size.y)
+		draw_rect(purple, Color("c28df2"), false, 2.0)
 
 func setup(is_prototype: bool) -> void:
 	_prototype = is_prototype
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	var ui_theme: Theme = Theme.new()
-	ui_theme.default_font_size = 15
-	var normal: StyleBoxFlat = StyleBoxFlat.new()
-	normal.bg_color = Color("273a42")
-	normal.border_color = Color("537068")
-	normal.set_border_width_all(1)
-	for side in ["left", "right", "top", "bottom"]:
-		normal.set("content_margin_" + side, 8.0)
-	for state in ["normal", "hover", "pressed", "disabled"]:
-		var style: StyleBoxFlat = normal.duplicate()
-		if state == "hover": style.bg_color = Color("42685b")
-		if state == "pressed": style.bg_color = Color("b48242")
-		if state == "disabled": style.bg_color = Color("19282e")
-		ui_theme.set_stylebox(state, "Button", style)
-	theme = ui_theme
+	theme = Vintage.make()
 	var left: VBoxContainer = _panel(0)
-	_title(left, "CHEESE\nKEEP", 26, CHEESE)
-	_title(left, "LA ÚLTIMA CORTEZA", 11, Color("83ab9a"))
+	_title(left, "CHEESE KEEP", 21, CHEESE)
+	_title(left, "LA ÚLTIMA CORTEZA", 11, MUTED)
 	_hp_label = _title(left, "ARQUERO", 14, MUTED)
-	_hp = _bar(left, Color("a5d485"))
+	_hp = _bar(left, Color("619a64"))
 	_cheese_label = _title(left, "QUESO", 14, CHEESE)
-	_cheese = _bar(left, CHEESE)
-	_cheese_label.visible = not _prototype
-	_cheese.visible = not _prototype
-	_status = _title(left, "", 16, Color("e9e6d1"))
+	_cheese = _bar(left, Color("c18f36"))
+	_cheese_label.visible = true
+	_cheese.visible = true
+	_status = _title(left, "", 14, MUTED)
 	_mount_label = _title(left, "", 13, CHEESE)
 	_charge_label = _title(left, "LISTO", 16, CHEESE)
 	_charge = ChargeGauge.new()
 	_charge.custom_minimum_size = Vector2(0, 14)
 	_charge.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	left.add_child(_charge)
-	_charge_hint = _title(left, "VERDE 0,85–0,98 s: crítico\nROJO: penetra; puede romper", 12, MUTED)
-	_title(left, "IZQUIERDO: caminar\nDERECHO: mantener carga\nSOLTAR DERECHO: disparar\nTORRE / SUELO: subir / bajar", 13, MUTED)
+	_charge_hint = _title(left, "○ VERDE 0,85–0,98: crítico\n◇ MORADO 1,55–1,67: franja\n× ROTURA 1,85 s · sin azar", 12, MUTED)
+	_controls = _title(left, "IZQUIERDO: caminar\nDERECHO: mantener carga\nSOLTAR DERECHO: disparar\nTORRE / SUELO: subir / bajar", 13, MUTED)
 	_help = _title(left, "Cargar ralentiza.\nTorre: inmune; queso +50 %.\nTienda sin pausa.\nEntre oleadas: elige y compra.", 12, MUTED)
 	_help.visible = false
-	var tutorial: Button = _button(left, "AYUDA", func(): _help.visible = not _help.visible)
-	tutorial.tooltip_text = "Mostrar u ocultar consejos"
 	var right: VBoxContainer = _panel(936)
 	_title(right, "EL ARCO" if _prototype else "PROVISIONES", 21, CHEESE)
 	if _prototype:
-		_title(right, "NARANJA\nCorto, impreciso\n\nVERDE\nCrítico: ¡suelta!\n\nROJO\nPenetra, pero arriesga\nrotura de cuerda", 14, MUTED)
+		_title(right, "NARANJA\nCorto, impreciso\n\nVERDE\nCrítico: ¡suelta!\n\nROJO\nPenetra\n\nMORADO\nBarre grupos\n\nROTURA\nGarantizada al límite", 14, MUTED)
 		_button(right, "REINICIAR PRUEBA", func(): restart_requested.emit())
 	else:
 		_ammo_buy = _button(right, "10 FLECHAS · 6 MONEDAS", func(): buy_ammo_requested.emit())
@@ -101,7 +94,7 @@ func setup(is_prototype: bool) -> void:
 		_tree_button = _button(right,"ÁRBOL DE HABILIDADES",func(): tree_requested.emit())
 		_legacy = _title(right,"",12,MUTED)
 		_offer_scroll = ScrollContainer.new()
-		_offer_scroll.custom_minimum_size.y = 280
+		_offer_scroll.custom_minimum_size.y = 330
 		_offer_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 		_offer_scroll.visible = false
 		right.add_child(_offer_scroll)
@@ -109,10 +102,6 @@ func setup(is_prototype: bool) -> void:
 		_offers.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		_offers.add_theme_constant_override("separation", 8)
 		_offer_scroll.add_child(_offers)
-	var effects: CheckButton = _toggle(right, "EFECTOS", true)
-	effects.toggled.connect(func(enabled: bool): effects_toggled.emit(enabled))
-	var audio: CheckButton = _toggle(right, "SONIDO", true)
-	audio.toggled.connect(func(enabled: bool): audio_toggled.emit(enabled))
 	message = _title(right, "", 13, CHEESE)
 
 func update_status(data: Dictionary) -> void:
@@ -127,11 +116,11 @@ func update_status(data: Dictionary) -> void:
 	var alive: bool = bool(data.get("alive", true))
 	var mounted: bool = bool(data.get("mounted", false))
 	if _prototype:
-		_status.text = "CAMPO DE PRUEBAS\nRatas: %d" % int(data.get("kills", 0))
+		_status.text = "PRUEBAS · ratas %d\nFlechas: %d · monedas: %d" % [int(data.get("kills", 0)), int(data.get("ammo", 0)), int(data.get("coins", 0))]
 	else:
 		_status.text = "OLEADA %d\nFlechas: %d\nMonedas: %d\nBajas: %d · %s" % [int(data.get("wave", 1)), int(data.get("ammo", 0)), int(data.get("coins", 0)), int(data.get("kills", 0)), _time_text(float(data.get("elapsed", 0)))]
 	var mounted_extra: int = roundi((float(data.get("mounted_damage", 1.5)) - 1.0) * 100.0)
-	_mount_label.text = "REFUGIO: QUESO %+d %% DAÑO" % mounted_extra if mounted else ""
+	_mount_label.text = "TORRE: queso %+d %% daño" % mounted_extra if mounted else ""
 	_help.text = "Cargar ralentiza.\nTorre: inmune; queso %+d %%.\nTienda sin pausa.\nEntre oleadas: elige y compra." % mounted_extra
 	if not alive: _mount_label.text = "REVIVES EN %.1f s" % float(data.get("respawn_left", 0))
 	var bow: Dictionary = data.get("bow", {})
@@ -141,8 +130,15 @@ func update_status(data: Dictionary) -> void:
 	_charge.time = float(bow.get("charge", 0))
 	_charge.sweet_start = maxf(0.0, float(data.get("sweet_start", 0.85)))
 	_charge.sweet_end = maxf(_charge.sweet_start, float(data.get("sweet_end", 0.98)))
-	_charge.max_time = maxf(_charge.sweet_end + 0.01, float(data.get("overcharge_peak", 2.2)))
-	_charge_hint.text = "VERDE %.2f–%.2f s: crítico\nROJO: penetra; puede romper" % [_charge.sweet_start, _charge.sweet_end]
+	_charge.spectral_start = float(data.get("spectral_start", 1.55))
+	_charge.spectral_end = float(data.get("spectral_end", 1.67))
+	_charge.max_time = maxf(_charge.spectral_end + 0.01, float(data.get("break_time", 1.85)))
+	_charge_hint.text = "○ VERDE %.2f–%.2f: crítico\n◇ MORADO %.2f–%.2f: franja\n× ROTURA %.2f s · sin azar" % [_charge.sweet_start, _charge.sweet_end, _charge.spectral_start, _charge.spectral_end, _charge.max_time]
+	_help.visible = bool(data.get("help_enabled", true))
+	var shoot: String = "IZQ" if str(data.get("shoot_button", "right")) == "left" else "DER"
+	var move: String = "DER" if shoot == "IZQ" else "IZQ"
+	var movement: String = "WASD: caminar" if str(data.get("movement_mode", "click")) == "wasd" else "%s: caminar" % move
+	_controls.text = "%s\n%s: cargar / soltar tiro\nCENTRAL: melee · E: torre\nESPACIO: dash · ESC: pausa\nDash %.1f s · Melee %.1f s" % [movement, shoot, float(data.get("dash_cooldown_left", 0)), float(data.get("melee_cooldown_left", 0))]
 	_charge.tint = color
 	_charge.queue_redraw()
 	if str(bow.get("state_label", "")) == "REPARANDO":
@@ -175,14 +171,17 @@ func show_offers(offers: Array[Dictionary]) -> void:
 	clear_offers()
 	if _offers == null: return
 	_offer_scroll.visible = not offers.is_empty()
+	_offered_ids = []
 	for offer in offers:
+		_offered_ids.append(str(offer.get("id", "")))
 		var id: String = str(offer.get("id", ""))
 		var button: Button = _button(_offers, str(offer.get("name", id)) + "\n" + str(offer.get("description", "")), func(): upgrade_requested.emit(id))
 		button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		button.custom_minimum_size = Vector2(172, 64)
+		button.custom_minimum_size = Vector2(188, 80)
 		button.tooltip_text = str(offer.get("description", ""))
 
 func clear_offers() -> void:
+	_offered_ids.clear()
 	if _offers != null:
 		for child in _offers.get_children():
 			_offers.remove_child(child)
@@ -198,7 +197,7 @@ func show_game_over(data: Dictionary) -> void:
 	_game_over.position = Vector2(336, 180)
 	_game_over.size = Vector2(480, 360)
 	var background: StyleBoxFlat = StyleBoxFlat.new()
-	background.bg_color = Color("13272b")
+	background.bg_color = Color("c8cbd0")
 	background.border_color = CHEESE
 	background.set_border_width_all(3)
 	for side in ["left", "right", "top", "bottom"]: background.set("content_margin_" + side, 24.0)
@@ -209,12 +208,12 @@ func show_game_over(data: Dictionary) -> void:
 	_game_over.add_child(box)
 	_title(box, "SE ACABÓ EL QUESO", 26, CHEESE)
 	_title(box, "Oleada %d · %s\nRatas vencidas: %d" % [int(data.get("wave", 1)), _time_text(float(data.get("elapsed", 0))), int(data.get("kills", 0))], 18, MUTED)
-	_title(box, "Monedas restantes: %d\nConservas %d / %d mejoras (%d %%)" % [int(data.get("coins", 0)), int(data.get("retained", 0)), int(data.get("total", 0)), roundi(float(data.get("ratio", 0)) * 100)], 16, Color("e9e6d1"))
+	_title(box, "Monedas restantes: %d\nConservas %d / %d mejoras (%d %%)" % [int(data.get("coins", 0)), int(data.get("retained", 0)), int(data.get("total", 0)), roundi(float(data.get("ratio", 0)) * 100)], 16, MUTED)
 	_button(box, "VOLVER A DEFENDER", func(): restart_requested.emit())
 
 func _panel(x: float) -> VBoxContainer:
 	var background: ColorRect = ColorRect.new()
-	background.color = Color("101a23")
+	background.color = Color("c8cbd0")
 	background.position = Vector2(x, 0)
 	background.size = Vector2(216, 720)
 	background.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -222,23 +221,29 @@ func _panel(x: float) -> VBoxContainer:
 	var margin: MarginContainer = MarginContainer.new()
 	margin.position = Vector2(x, 0)
 	margin.size = Vector2(216, 720)
-	for side in ["left", "right", "top", "bottom"]: margin.add_theme_constant_override("margin_" + side, 18)
+	for side in ["left", "right", "top", "bottom"]: margin.add_theme_constant_override("margin_" + side, 12)
 	add_child(margin)
 	var box: VBoxContainer = VBoxContainer.new()
-	box.add_theme_constant_override("separation", 9)
+	box.add_theme_constant_override("separation", 8)
 	margin.add_child(box)
 	return box
 
 func _title(box: VBoxContainer, text: String, font_size: int, color: Color) -> Label:
 	var label: Label = Label.new()
 	label.text = text
-	label.custom_minimum_size.x = 180
+	label.custom_minimum_size.x = 188
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	label.add_theme_font_size_override("font_size", font_size)
-	if font_size >= 21:
-		label.add_theme_font_override("font",PixelFont)
-		label.add_theme_font_size_override("font_size",int(font_size * 0.65))
 	label.add_theme_color_override("font_color", color)
+	if font_size >= 21:
+		var bar_style: StyleBoxFlat = StyleBoxFlat.new()
+		bar_style.bg_color = Color("182e57")
+		bar_style.content_margin_left = 5
+		bar_style.content_margin_top = 5
+		bar_style.content_margin_bottom = 5
+		label.add_theme_stylebox_override("normal", bar_style)
+		label.add_theme_color_override("font_color", Color.WHITE)
+		label.add_theme_font_size_override("font_size", 16)
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	box.add_child(label)
 	return label
@@ -278,60 +283,18 @@ func has_overlay() -> bool:
 	return is_instance_valid(_tree)
 
 func show_tree(history: Array, definitions: Array) -> void:
-	if is_instance_valid(_tree):
-		return
-	_tree = PanelContainer.new()
-	_tree.position = Vector2(234,62)
-	_tree.size = Vector2(684,596)
-	var style: StyleBoxFlat = StyleBoxFlat.new()
-	style.bg_color = Color("13272b")
-	style.border_color = CHEESE
-	style.set_border_width_all(2)
-	for side in ["left","right","top","bottom"]:
-		style.set("content_margin_"+side,16.0)
-	_tree.add_theme_stylebox_override("panel",style)
+	if is_instance_valid(_tree): return
+	_tree = SkillTree.new()
+	_tree.setup(history, definitions, _offered_ids)
+	_tree.closed.connect(func():
+		close_tree()
+		tree_closed.emit())
 	add_child(_tree)
-	var body: VBoxContainer = VBoxContainer.new()
-	body.add_theme_constant_override("separation",12)
-	_tree.add_child(body)
-	_title(body,"TU ÁRBOL DE HABILIDADES",24,CHEESE)
-	_title(body,"Una elección gratis tras cada oleada. Las ramas requieren su mejora anterior.",14,MUTED)
-	var scroll: ScrollContainer = ScrollContainer.new()
-	scroll.custom_minimum_size.y = 415
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	body.add_child(scroll)
-	var grid: GridContainer = GridContainer.new()
-	grid.columns = 2
-	grid.add_theme_constant_override("h_separation",12)
-	grid.add_theme_constant_override("v_separation",14)
-	scroll.add_child(grid)
-	var names: Dictionary = {}
-	for item: Dictionary in definitions:
-		names[str(item.id)] = str(item.name)
-	for category: String in ["arco","flechas","movilidad","torre"]:
-		var branch: VBoxContainer = VBoxContainer.new()
-		branch.custom_minimum_size.x = 310
-		grid.add_child(branch)
-		_title(branch,category.to_upper(),16,CHEESE)
-		for item: Dictionary in definitions:
-			if str(item.category) != category:
-				continue
-			var count: int = history.count(str(item.id))
-			var requirements: Array = item.get("requires",[])
-			var unlocked: bool = true
-			for id: String in requirements:
-				unlocked = unlocked and history.has(id)
-			var prefix: String = "● " if count > 0 else ("○ " if unlocked else "↳ ")
-			var node_label: Label = _title(branch,prefix+str(item.name)+"  %d/%d" % [count,int(item.max_rank)],14,Color("91ed70") if count > 0 else MUTED)
-			node_label.custom_minimum_size.x = 305
-			node_label.tooltip_text = str(item.description)
-			var detail: String = str(item.description)
-			if not requirements.is_empty():
-				detail += "\nRequiere: " + str(names.get(str(requirements[0]),requirements[0]))
-			var description: Label = _title(branch,detail,12,Color("789d90"))
-			description.custom_minimum_size.x = 305
-	_button(body,"VOLVER AL QUESO",func():
+
+func close_tree() -> void:
+	if is_instance_valid(_tree):
+		remove_child(_tree)
 		_tree.queue_free()
-		_tree = null)
+		_tree = null
 
 
