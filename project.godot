@@ -2,6 +2,11 @@ config_version=5
 
 [application]
 config/name="Cheesekeep — La última corteza"
+config/version="2.0"
+boot_splash/image="res://assets/sprites/boot_splash.png"
+boot_splash/bg_color=Color(0.145,0.294,0.314,1)
+boot_splash/fullsize=false
+boot_splash/use_filter=false
 run/main_scene="res://scenes/game/game.tscn"
 config/features=PackedStringArray("4.4", "GL Compatibility")
 

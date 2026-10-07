@@ -162,12 +162,12 @@ func tick(delta: float, charging: bool) -> void:
 		request_interact()
 		return
 	var step: float = speed * (charging_slow if charging else 1.0) * (value("melee_slow", 0.65) if melee_left > 0.0 else 1.0) * delta
-	if direct_movement and movement_input.is_zero_approx():
+	if direct_movement and movement_input.is_zero_approx() and not wants_tower:
 		return
 	if _has_detour and position.distance_to(_detour) < 1.0:
 		_has_detour = false
 	var target: Vector2 = _detour if _has_detour else destination
-	var next: Vector2 = position + movement_input * step if direct_movement else position.move_toward(target, step)
+	var next: Vector2 = position + movement_input * step if direct_movement and not wants_tower else position.move_toward(target, step)
 	var safe: Vector2 = Geometry.constrain_motion(position, next, actor_radius, tower_enabled)
 	# Persist one visible perimeter waypoint; do not switch sides every tick.
 	if safe.distance_to(next) > 0.1 and not direct_movement and not wants_tower:

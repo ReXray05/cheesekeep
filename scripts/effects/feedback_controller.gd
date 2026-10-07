@@ -28,6 +28,15 @@ var players: Array[AudioStreamPlayer] = []
 var music: AudioStreamPlayer
 var sounds: Dictionary = {}
 var activated: bool = false
+var music_volume: float = 0.7:
+	set(value):
+		music_volume = clampf(value,0,1)
+		if is_instance_valid(music): music.volume_db = -22.0 + linear_to_db(maxf(0.0001,music_volume))
+var sfx_volume: float = 0.8:
+	set(value):
+		sfx_volume = clampf(value,0,1)
+		for voice: AudioStreamPlayer in players:
+			voice.volume_db = -12.0 + linear_to_db(maxf(0.0001,sfx_volume))
 var sound_index: int = 0
 var rng: RandomNumberGenerator = RandomNumberGenerator.new()
 
@@ -42,7 +51,7 @@ func setup() -> void:
 		player.volume_db = -12.0
 		add_child(player)
 		players.append(player)
-	for key: String in ["fire", "impact", "critical", "blocked", "snap", "damage", "purchase", "wave_start", "wave_clear", "over"]:
+	for key: String in ["fire", "impact", "critical", "blocked", "snap", "damage", "purchase", "wave_start", "wave_clear", "over", "dash", "melee", "ready", "spectral", "perfect"]:
 		sounds[key] = load("res://assets/audio/" + key + ".wav")
 	music = AudioStreamPlayer.new()
 	music.playback_type = AudioServer.PLAYBACK_TYPE_STREAM

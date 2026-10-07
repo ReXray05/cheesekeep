@@ -77,7 +77,7 @@ func setup(is_prototype: bool) -> void:
 	_charge.custom_minimum_size = Vector2(0, 14)
 	_charge.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	left.add_child(_charge)
-	_charge_hint = _title(left, "○ VERDE 0,85–0,98: crítico\n◇ MORADO 1,55–1,67: franja\n× ROTURA 1,85 s · sin azar", 12, MUTED)
+	_charge_hint = _title(left, "o VERDE 0,85–0,98: crítico\n+ MORADO 1,55–1,67: franja\n× ROTURA 1,85 s · sin azar", 12, MUTED)
 	_controls = _title(left, "IZQUIERDO: caminar\nDERECHO: mantener carga\nSOLTAR DERECHO: disparar\nTORRE / SUELO: subir / bajar", 13, MUTED)
 	_help = _title(left, "Cargar ralentiza.\nTorre: inmune; queso +50 %.\nTienda sin pausa.\nEntre oleadas: elige y compra.", 12, MUTED)
 	_help.visible = false
@@ -133,7 +133,7 @@ func update_status(data: Dictionary) -> void:
 	_charge.spectral_start = float(data.get("spectral_start", 1.55))
 	_charge.spectral_end = float(data.get("spectral_end", 1.67))
 	_charge.max_time = maxf(_charge.spectral_end + 0.01, float(data.get("break_time", 1.85)))
-	_charge_hint.text = "○ VERDE %.2f–%.2f: crítico\n◇ MORADO %.2f–%.2f: franja\n× ROTURA %.2f s · sin azar" % [_charge.sweet_start, _charge.sweet_end, _charge.spectral_start, _charge.spectral_end, _charge.max_time]
+	_charge_hint.text = "o VERDE %.2f–%.2f: crítico\n+ MORADO %.2f–%.2f: franja\n× ROTURA %.2f s · sin azar" % [_charge.sweet_start, _charge.sweet_end, _charge.spectral_start, _charge.spectral_end, _charge.max_time]
 	_help.visible = bool(data.get("help_enabled", true))
 	var shoot: String = "IZQ" if str(data.get("shoot_button", "right")) == "left" else "DER"
 	var move: String = "DER" if shoot == "IZQ" else "IZQ"
