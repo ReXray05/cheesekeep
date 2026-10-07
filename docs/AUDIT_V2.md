@@ -42,7 +42,8 @@ No existen dash, melee, AOE, pickups, pausa, menú principal ni splash personali
 - Arranque Godot headless90frames sin errores.
 - Ensayo existente final_balance_tests: 16 comprobaciones, cero fallos. Cinco oleadas y jefe,56bajas, queso274,5; compras/reparación/mejoras reales. Bot automatizado, no valoración humana de diversión.
 - Sesión navegador publicada ?qa=1: partida1, montar e iniciar oleada, HP arquero100 estando montado; seis ratas, queso90 y después derrota en tiempo simulado40,83 s. Rata trasera parcialmente oculta. Reinicio mediante botón correcto.
-- Partida2: volver a montar, bajar al suelo y desplazarse; telemetría mounted=false y posición distinta, empezar oleada manual. Clic derecho breve permite disparo de baja carga; no se mantiene físicamente botón con esta API. Ensayos previos CORE_GATE/MVP cubren cargas temporizadas mediante harness; no se sustituyen por afirmaciones de juego humano.
+- Partida2: volver a montar, bajar al suelo y desplazarse; telemetría mounted=false y posición distinta, empezar oleada manual. La sesión acaba en derrota, con arquero muerto y torre destruida; no se certifica aquí una reaparición observada directamente.
+- Partida3, después de reiniciar: clic derecho breve en preparación confirmado por munición40→39 y arrows=1. No se mantiene físicamente el botón con esta API. Ensayos previos CORE_GATE/MVP cubren cargas temporizadas mediante harness; no se sustituyen por afirmaciones de juego humano.
 - FPS observados25–30 en preparación y18–26 con seis básicas en este navegador automatizado; tiempo simulado menor que reloj en algunos tramos. Se requiere medición posterior en condiciones normales; no es evidencia de 60 FPS sostenidos.
 
 ## Dependencias de evolución
