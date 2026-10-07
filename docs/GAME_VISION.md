@@ -93,3 +93,19 @@ Tiempo hasta sweet spot y ancho de su ventana; comienzo de sobrecarga; curva de 
 ## Puerta de desarrollo
 No se han creado código, escenas, assets ni proyecto Godot. La entrevista ha finalizado. SPEC, arquitectura y plan se redactan antes de crear el proyecto; PLAN CRITIC revisará el plan antes del desarrollo. Godot 4.x y GDScript son la preferencia técnica original.
 
+# Evolución V2 — decisiones confirmadas (entrevista cerrada)
+
+Esta sección sustituye reglas incompatibles de V1; el texto histórico se conserva. GAMEPLAY > FEEL > CLARIDAD > ROBUSTEZ > CONTENIDO > EFECTOS. Se evoluciona el proyecto existente.
+
+CONFIRMADO: alternar excursiones breves y combate móvil. No forzar salida con temporizadores/castigos arbitrarios. Monedas por bajas físicas; flechas falladas recuperables. Cargas bajas se clavan al final del cono; verdes y superiores continúan más allá del indicador y, si fallan, se recuperan en el último punto accesible del terreno. Recursos permanecen entre oleadas hasta recoger; premio de oleada sigue automático. Recogida cercana básica cómoda y mejora magnética. No bonus económico adicional por estar fuera en V2.
+
+CONFIRMADO: melee con botón central, barrido corto hacia cursor, múltiples ratas, daño moderado, empuje claro y pausa entre golpes. Movimiento algo más lento al golpear, sin melee durante carga. Bajas melee dan monedas y algunas flechas físicas garantizadas. Melee funciona con toda eficacia durante rotura del arco. Recuperación viable con cero flechas/cero monedas.
+
+CONFIRMADO: secuencia naranja → verde → rojo → morado → rojo breve → rotura garantizada al excederse. Sin rotura aleatoria previa. Morado es la habilidad de área integrada en la carga, sin botón/recurso separado: una flecha espectral gigante de franja constante, daño moderado, respeta protección, atraviesa todas las ratas una vez por rata y consume una flecha. Recuperable si falla. Verde sigue siendo crítico que rompe protección.
+
+CONFIRMADO: movimiento configurable WASD/clic, disparo izquierdo/derecho; movimiento/interacción usa el botón contrario, central melee. E interactúa cerca de torre en WASD; clic torre también disponible. Espacio dash corto y ágil en dirección de movimiento o cursor estando quieto, corrección ligera, invulnerabilidad breve inicial atravesando ratas, obstáculos sólidos bloquean. Carga continúa; melee solicitado durante dash se ejecuta al terminar si no hay carga. Espacio desde torre baja y encadena dash; no monta automáticamente al pasar cerca.
+
+CONFIRMADO: ajustes persistentes (movimiento, disparo, música/SFX separados, ayuda, efectos); pausa teclado/botón integrada, menú principal y boot splash personalizados; UI original inspirada en sistemas Windows antiguos; árbol visual de ramas combinables con requisitos y especializaciones que cambian estilo. Una mejora gratuita por oleada, retención automática por porcentaje del saldo al perder, tiendas sin pausa. Perfect shot, BREAK y READY cortos y reconocibles. Cámara suave y rápida. Corrección real de aim, proyectiles y geometría de torre/ratas.
+
+ABIERTO PARA BALANCE/PLAYTEST, no para nueva entrevista: cifras de dash/melee/morado/radios, tiempos de ventanas, daño, precios y contenido exacto del árbol dentro de estas reglas. Se ajustan con pruebas y revisión sin añadir sistemas ajenos.
+
