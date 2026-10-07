@@ -3,13 +3,15 @@ extends Node2D
 var player: Node2D
 var clock: float = 0.0
 
-func _process(delta: float) -> void:
-	clock += delta
+func _process(_delta: float) -> void:
+	clock = player.visual_clock if is_instance_valid(player) else clock
 	queue_redraw()
 
 func _draw() -> void:
 	if not is_instance_valid(player) or not player.alive:
 		return
+	for ghost in player.afterimages:
+		draw_rect(Rect2(ghost.position - player.position + Vector2(-6,-18), Vector2(12,18)), Color(0.32,0.85,0.78,float(ghost.life) * 2.0))
 	draw_set_transform(Vector2.ZERO, 0, Vector2(1, 0.5))
 	draw_circle(Vector2(0, 2), 9, Color(0.015,0.02,0.03,0.55))
 	draw_set_transform(Vector2(0, -26 if player.mounted else 0))
@@ -27,3 +29,4 @@ func _draw() -> void:
 	draw_rect(Rect2(2,-17+bob,2,2), Color("182635"))
 	draw_rect(Rect2(-7,-16+bob,2,3), Color("df6267"))
 	draw_rect(Rect2(-9,-8+bob,3,7), Color("714c43"))
+
