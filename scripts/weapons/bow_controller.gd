@@ -98,6 +98,7 @@ func release(direction: Vector2) -> void:
 	var pierce: int = 1
 	if bool(data["overcharge"]):
 		pierce = 2 + (1 if float(data["excess"]) >= 0.6 else 0)
+	pierce += maxi(0,int(value("pierce_bonus",0)))
 	state = State.IDLE
 	charge_time = 0.0
 	shot.emit({"direction": endpoint.normalized(), "speed": float(data["speed"]),

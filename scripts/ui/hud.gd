@@ -7,9 +7,11 @@ signal upgrade_requested(id: String)
 signal restart_requested
 signal effects_toggled(enabled: bool)
 signal audio_toggled(enabled: bool)
+signal tree_requested
 
 const CHEESE: Color = Color("ffd775")
 const MUTED: Color = Color("a6bfb1")
+const PixelFont = preload("res://assets/fonts/PressStart2P-Regular.ttf")
 var message: Label
 var _prototype: bool = false
 var _hp: ProgressBar
@@ -28,6 +30,9 @@ var _next: Button
 var _offers: VBoxContainer
 var _offer_scroll: ScrollContainer
 var _game_over: PanelContainer
+var _tree: PanelContainer
+var _tree_button: Button
+var _legacy: Label
 var _toast_left: float = 0.0
 
 class ChargeGauge extends Control:
@@ -93,6 +98,8 @@ func setup(is_prototype: bool) -> void:
 		_repair = _button(right, "+30 QUESO · 12 MONEDAS", func(): repair_requested.emit())
 		_title(right, "Comprar no pausa el combate", 12, MUTED)
 		_next = _button(right, "EMPEZAR OLEADA", func(): next_wave_requested.emit())
+		_tree_button = _button(right,"ÁRBOL DE HABILIDADES",func(): tree_requested.emit())
+		_legacy = _title(right,"",12,MUTED)
 		_offer_scroll = ScrollContainer.new()
 		_offer_scroll.custom_minimum_size.y = 280
 		_offer_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
@@ -150,6 +157,9 @@ func update_status(data: Dictionary) -> void:
 		_next.visible = phase == "PREP" or phase == "CHOICE"
 		_next.disabled = phase != "PREP"
 		_next.text = "ELIGE UNA MEJORA" if phase == "CHOICE" else "EMPEZAR OLEADA"
+		_tree_button.visible = phase == "PREP" or phase == "CHOICE"
+		_legacy.text = "AL PERDER: conservas %d / %d mejoras\nGuarda monedas para proteger el árbol." % [int(data.get("retained_preview",0)),int(data.get("upgrade_count",0))]
+		_legacy.visible = phase != "CHOICE"
 
 func toast(text: String) -> void:
 	if message == null: return
@@ -225,6 +235,9 @@ func _title(box: VBoxContainer, text: String, font_size: int, color: Color) -> L
 	label.custom_minimum_size.x = 180
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	label.add_theme_font_size_override("font_size", font_size)
+	if font_size >= 21:
+		label.add_theme_font_override("font",PixelFont)
+		label.add_theme_font_size_override("font_size",int(font_size * 0.65))
 	label.add_theme_color_override("font_color", color)
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	box.add_child(label)
@@ -260,5 +273,65 @@ func _toggle(box: VBoxContainer, text: String, enabled: bool) -> CheckButton:
 
 func _time_text(seconds: float) -> String:
 	return "%02d:%02d" % [int(seconds) / 60, int(seconds) % 60]
+
+func has_overlay() -> bool:
+	return is_instance_valid(_tree)
+
+func show_tree(history: Array, definitions: Array) -> void:
+	if is_instance_valid(_tree):
+		return
+	_tree = PanelContainer.new()
+	_tree.position = Vector2(234,62)
+	_tree.size = Vector2(684,596)
+	var style: StyleBoxFlat = StyleBoxFlat.new()
+	style.bg_color = Color("13272b")
+	style.border_color = CHEESE
+	style.set_border_width_all(2)
+	for side in ["left","right","top","bottom"]:
+		style.set("content_margin_"+side,16.0)
+	_tree.add_theme_stylebox_override("panel",style)
+	add_child(_tree)
+	var body: VBoxContainer = VBoxContainer.new()
+	body.add_theme_constant_override("separation",12)
+	_tree.add_child(body)
+	_title(body,"TU ÁRBOL DE HABILIDADES",24,CHEESE)
+	_title(body,"Una elección gratis tras cada oleada. Las ramas requieren su mejora anterior.",14,MUTED)
+	var scroll: ScrollContainer = ScrollContainer.new()
+	scroll.custom_minimum_size.y = 415
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	body.add_child(scroll)
+	var grid: GridContainer = GridContainer.new()
+	grid.columns = 2
+	grid.add_theme_constant_override("h_separation",12)
+	grid.add_theme_constant_override("v_separation",14)
+	scroll.add_child(grid)
+	var names: Dictionary = {}
+	for item: Dictionary in definitions:
+		names[str(item.id)] = str(item.name)
+	for category: String in ["arco","flechas","movilidad","torre"]:
+		var branch: VBoxContainer = VBoxContainer.new()
+		branch.custom_minimum_size.x = 310
+		grid.add_child(branch)
+		_title(branch,category.to_upper(),16,CHEESE)
+		for item: Dictionary in definitions:
+			if str(item.category) != category:
+				continue
+			var count: int = history.count(str(item.id))
+			var requirements: Array = item.get("requires",[])
+			var unlocked: bool = true
+			for id: String in requirements:
+				unlocked = unlocked and history.has(id)
+			var prefix: String = "● " if count > 0 else ("○ " if unlocked else "↳ ")
+			var node_label: Label = _title(branch,prefix+str(item.name)+"  %d/%d" % [count,int(item.max_rank)],14,Color("91ed70") if count > 0 else MUTED)
+			node_label.custom_minimum_size.x = 305
+			node_label.tooltip_text = str(item.description)
+			var detail: String = str(item.description)
+			if not requirements.is_empty():
+				detail += "\nRequiere: " + str(names.get(str(requirements[0]),requirements[0]))
+			var description: Label = _title(branch,detail,12,Color("789d90"))
+			description.custom_minimum_size.x = 305
+	_button(body,"VOLVER AL QUESO",func():
+		_tree.queue_free()
+		_tree = null)
 
 

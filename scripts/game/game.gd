@@ -8,6 +8,8 @@ const Enemy = preload("res://scripts/enemies/enemy_controller.gd")
 const Player = preload("res://scripts/player/player_controller.gd")
 const Router = preload("res://scripts/input/input_controller.gd")
 const Ground = preload("res://scripts/game/world_visuals.gd")
+const Radar = preload("res://scripts/ui/threat_radar.gd")
+const Feedback = preload("res://scripts/effects/feedback_controller.gd")
 const HUD = preload("res://scripts/ui/hud.gd")
 const Wave = preload("res://scripts/waves/wave_manager.gd")
 const Economy = preload("res://scripts/economy/economy_manager.gd")
@@ -47,6 +49,10 @@ var effects_enabled: bool = true
 var shake: float = 0.0
 var result: Dictionary = {}
 var telemetry_timer: float = 0.0
+var radar: Node2D
+var feedback: Node2D
+var chromatic: ColorRect
+var float_count: int = 0
 
 func _ready() -> void:
 	config = JSON.parse_string(FileAccess.get_file_as_string("res://data/balance.json"))
@@ -59,6 +65,9 @@ func _ready() -> void:
 	ground = Ground.new()
 	ground.z_index = 0
 	world.add_child(ground)
+	feedback = Feedback.new()
+	world.add_child(feedback)
+	feedback.setup()
 	player = Player.new()
 	world.add_child(player)
 	camera = Camera2D.new()
@@ -76,6 +85,22 @@ func _ready() -> void:
 	bow_art = BowArt.new()
 	bow_art.bow = bow
 	world.add_child(bow_art)
+	var overlay: CanvasLayer = CanvasLayer.new()
+	overlay.layer = 5
+	viewport.add_child(overlay)
+	radar = Radar.new()
+	overlay.add_child(radar)
+	var effect_layer: CanvasLayer = CanvasLayer.new()
+	effect_layer.layer = 3
+	viewport.add_child(effect_layer)
+	chromatic = ColorRect.new()
+	chromatic.size = Vector2(360,360)
+	chromatic.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var distortion: ShaderMaterial = ShaderMaterial.new()
+	distortion.shader = preload("res://scripts/effects/chromatic.gdshader")
+	chromatic.material = distortion
+	chromatic.visible = false
+	effect_layer.add_child(chromatic)
 	router = Router.new()
 	router.field = field
 	router.viewport = viewport
@@ -90,6 +115,7 @@ func _ready() -> void:
 		economy = Economy.new()
 		economy.setup(config.economy)
 		upgrades = Upgrades.new()
+		upgrades.expanded = true
 		upgrades.setup(Persistence.load_history())
 		_apply_upgrades(true)
 		player.tower_enabled = true
@@ -97,6 +123,7 @@ func _ready() -> void:
 		player.destination = player.position
 		ground.tower_enabled = true
 		wave_manager = Wave.new()
+		wave_manager.variety_enabled = true
 		add_child(wave_manager)
 		wave_manager.spawn_requested.connect(_spawn_enemy)
 		wave_manager.completed.connect(_wave_completed)
@@ -129,8 +156,14 @@ func _build_screen() -> void:
 	hud.next_wave_requested.connect(_next_wave)
 	hud.upgrade_requested.connect(_choose_upgrade)
 	hud.restart_requested.connect(_reset_prototype)
-	hud.effects_toggled.connect(func(value: bool) -> void: effects_enabled = value)
-	hud.audio_toggled.connect(func(_value: bool) -> void: pass)
+	hud.tree_requested.connect(func() -> void:
+		if not prototype and (phase == "PREP" or phase == "CHOICE"):
+			hud.show_tree(upgrades.history,upgrades.definitions))
+	hud.effects_toggled.connect(func(value: bool) -> void:
+		effects_enabled = value
+		if is_instance_valid(feedback): feedback.enabled = value)
+	hud.audio_toggled.connect(func(value: bool) -> void:
+		if is_instance_valid(feedback): feedback.audio_enabled = value)
 	message = hud.message
 
 func _process(delta: float) -> void:
@@ -152,6 +185,10 @@ func _process(delta: float) -> void:
 	if phase != "OVER":
 		player.tick(delta,shot_state.charging)
 	camera.position = player.position
+	feedback.tick(delta)
+	camera.offset = Vector2(sin(elapsed*119),cos(elapsed*143)) * minf(4,feedback.shake_strength) if effects_enabled else Vector2.ZERO
+	chromatic.visible = effects_enabled and feedback.flash_strength > 0.01
+	chromatic.material.set_shader_parameter("amount",feedback.flash_strength if effects_enabled else 0.0)
 	indicator.position = player.bow_origin()
 	indicator.direction = aim
 	indicator.queue_redraw()
@@ -184,7 +221,8 @@ func _process(delta: float) -> void:
 					_toast("¡El queso te devuelve a la vida!",2.0)
 	ground.tower_hp = tower_hp
 	ground.tower_max = tower_max
-	router.enabled = phase != "OVER" and player.alive
+	router.enabled = phase != "OVER" and player.alive and not hud.has_overlay()
+	radar_refresh()
 	hud.update_status(_status_data(shot_state))
 	telemetry_timer -= delta
 	if OS.has_feature("web") and (prototype or qa_mode) and (shot_state.charging or telemetry_timer <= 0.0):
@@ -217,6 +255,7 @@ func _shoot(data: Dictionary) -> void:
 	if not prototype and not economy.consume_arrow():
 		return
 	bow_art.kick()
+	feedback.fire(player.bow_origin(),data.direction,data.damage,data.critical)
 	var arrow: Node2D = Arrow.new()
 	world.add_child(arrow)
 	arrow.setup(player.bow_origin(),data)
@@ -238,16 +277,23 @@ func _segment(from: Vector2, to: Vector2, arrow: Node2D) -> void:
 	for candidate in candidates:
 		var enemy: Node2D = candidate.enemy
 		var result: Dictionary = enemy.take_hit(arrow.shot_data.damage,arrow.shot_data.critical)
+		feedback.impact(enemy.position,arrow.shot_data.critical,result.blocked,result.killed)
 		_float_text(enemy.position,str(int(result.dealt)),Color("ffda7b") if arrow.shot_data.critical else Color("f5eee0"))
 		if arrow.register_hit(enemy.get_instance_id()):
 			arrow.queue_free()
 			break
 
 func _float_text(at: Vector2, text: String, color: Color) -> void:
+	if float_count >= int(config.limits.effects):
+		return
+	float_count += 1
 	var label: Label = Label.new()
 	label.text = text
 	label.position = at + Vector2(-8,-24)
-	label.add_theme_font_size_override("font_size",12)
+	label.add_theme_font_size_override("font_size",8)
+	label.add_theme_font_override("font",preload("res://assets/fonts/PressStart2P-Regular.ttf"))
+	label.add_theme_color_override("font_outline_color",Color("182025"))
+	label.add_theme_constant_override("outline_size",2)
 	label.add_theme_color_override("font_color",color)
 	label.z_index = 30
 	world.add_child(label)
@@ -255,10 +301,13 @@ func _float_text(at: Vector2, text: String, color: Color) -> void:
 	tween.set_parallel(true)
 	tween.tween_property(label,"position",label.position+Vector2(0,-18),0.7)
 	tween.tween_property(label,"modulate:a",0.0,0.7)
-	tween.chain().tween_callback(label.queue_free)
+	tween.chain().tween_callback(func() -> void:
+		label.queue_free()
+		float_count = maxi(0,float_count-1))
 
 func _snapped() -> void:
 	router.reset()
+	feedback.snap(player.bow_origin())
 	_toast("¡CUERDA ROTA!\nSe repara en 1,5 s",2)
 
 func _spawn_dummy() -> void:
@@ -280,7 +329,7 @@ func _reset_prototype() -> void:
 	get_tree().reload_current_scene()
 
 func _status_data(shot_state: Dictionary) -> Dictionary:
-	return {"hp":player.hp,"max_hp":player.max_hp,"ammo":999 if prototype else economy.ammo,"coins":0 if prototype else economy.coins,"tower_hp":tower_hp,"tower_max":tower_max,"wave":0 if prototype else wave_manager.wave,"phase":phase,"kills":score,"mounted":player.mounted,"alive":player.alive,"respawn_left":maxf(0,respawn_left),"bow":shot_state,"elapsed":elapsed,"sweet_start":config.bow.sweet_start,"sweet_end":config.bow.sweet_end,"overcharge_peak":config.bow.overcharge_peak,"ammo_price":config.economy.ammo_price,"ammo_pack":config.economy.ammo_pack,"repair_price":config.economy.repair_price,"repair_hp":config.economy.repair_hp,"mounted_damage":config.tower.mounted_damage}
+	return {"hp":player.hp,"max_hp":player.max_hp,"ammo":999 if prototype else economy.ammo,"coins":0 if prototype else economy.coins,"tower_hp":tower_hp,"tower_max":tower_max,"wave":0 if prototype else wave_manager.wave,"phase":phase,"kills":score,"mounted":player.mounted,"alive":player.alive,"respawn_left":maxf(0,respawn_left),"bow":shot_state,"elapsed":elapsed,"sweet_start":config.bow.sweet_start,"sweet_end":config.bow.sweet_end,"overcharge_peak":config.bow.overcharge_peak,"ammo_price":config.economy.ammo_price,"ammo_pack":config.economy.ammo_pack,"repair_price":config.economy.repair_price,"repair_hp":config.economy.repair_hp,"mounted_damage":config.tower.mounted_damage,"upgrade_count":0 if prototype else upgrades.history.size(),"retained_preview":0 if prototype else int(floor(upgrades.history.size()*clampf(float(economy.coins)/float(config.economy.retention_coins),0,1)))}
 
 func _spawn_enemy(kind: String, at: Vector2) -> void:
 	if phase == "OVER":
@@ -290,6 +339,9 @@ func _spawn_enemy(kind: String, at: Vector2) -> void:
 	enemy.position = at
 	world.add_child(enemy)
 	enemy.attack.connect(_attacked)
+	enemy.summon_requested.connect(func(summon_kind: String,summon_at: Vector2) -> void:
+		if enemies.size() < int(config.limits.enemies):
+			_spawn_enemy(summon_kind,summon_at))
 	enemy.died.connect(func(reward: int) -> void:
 		if phase == "OVER":
 			return
@@ -305,11 +357,13 @@ func _attacked(target: String, amount: float) -> void:
 	if target == "tower":
 		var damage: float = amount * (float(config.tower.mounted_damage) if player.mounted else 1.0)
 		tower_hp = maxf(0.0,tower_hp - damage)
+		feedback.damage(Vector2.ZERO,damage > 10.0)
 		_float_text(Vector2(0,-18),"-%d" % int(damage),Color("ff757b"))
 		if tower_hp <= 0.0:
 			_game_over()
 	else:
 		if player.hurt(amount):
+			feedback.damage(player.position,amount > 10.0)
 			_float_text(player.position,"-%d" % int(amount),Color("ff757b"))
 			if not player.alive:
 				bow.reset()
@@ -322,12 +376,14 @@ func _next_wave() -> void:
 		return
 	phase = "WAVE"
 	wave_manager.start()
+	feedback.wave_start()
 	_toast("OLEADA %d\n¡Las ratas vienen por todos lados!" % wave_manager.wave,3)
 
 func _wave_completed(number: int, reward: int) -> void:
 	if phase != "WAVE":
 		return
 	economy.earn(reward)
+	feedback.wave_clear()
 	phase = "CHOICE"
 	var offers: Array = upgrades.offers()
 	if offers.is_empty():
@@ -344,6 +400,7 @@ func _choose_upgrade(id: String) -> void:
 		_apply_upgrades(false)
 		phase = "PREP"
 		hud.clear_offers()
+		feedback.purchase()
 		_toast("Mejora adquirida.\nCompra, repara y comienza cuando quieras.",5)
 
 func _apply_upgrades(full_health: bool) -> void:
@@ -359,7 +416,11 @@ func _apply_upgrades(full_health: bool) -> void:
 func _buy_ammo() -> void:
 	if prototype or phase == "OVER":
 		return
-	_toast("+%d flechas" % int(config.economy.ammo_pack) if economy.buy_ammo() else "Faltan monedas para comprar flechas.",2)
+	if economy.buy_ammo():
+		feedback.purchase()
+		_toast("+%d flechas" % int(config.economy.ammo_pack),2)
+	else:
+		_toast("Faltan monedas para comprar flechas.",2)
 
 func _repair() -> void:
 	if prototype or phase == "OVER":
@@ -368,12 +429,14 @@ func _repair() -> void:
 		_toast("El queso ya está intacto.",2)
 	elif economy.spend(int(config.economy.repair_price)):
 		tower_hp = minf(tower_max,tower_hp + float(config.economy.repair_hp))
+		feedback.purchase()
 		_toast("Queso reparado",2)
 	else:
 		_toast("Faltan monedas para reparar el queso.",2)
 
 func _game_over() -> void:
 	phase = "OVER"
+	feedback.over()
 	wave_manager.active = false
 	bow.reset()
 	router.reset()
@@ -387,3 +450,12 @@ func _game_over() -> void:
 	hud.show_game_over(result)
 	if not saved:
 		_toast("El navegador no ha podido guardar las mejoras. Revisa el almacenamiento local.",8)
+
+func radar_refresh() -> void:
+	radar.targets.clear()
+	for enemy in enemies:
+		if not enemy.dead:
+			radar.targets.append(viewport.get_canvas_transform() * enemy.position)
+	radar.show_cursor = router.inside and phase != "OVER" and not hud.has_overlay()
+	radar.cursor = viewport.get_canvas_transform() * router.mouse_world
+	radar.queue_redraw()

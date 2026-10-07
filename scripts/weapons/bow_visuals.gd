@@ -15,7 +15,7 @@ func _process(delta: float) -> void:
 func _draw() -> void:
 	var data: Dictionary = bow.snapshot() if bow != null and is_instance_valid(bow) else {}
 	var tint: Color = data.get("color", Color("edbe7a"))
-	var charge: float = clampf(float(data.get("charge", 0.0)) / 0.98, 0.0, 1.0)
+	var charge: float = clampf(float(data.get("charge", 0.0)) / (bow.value("sweet_start",0.85) if bow != null else 0.85), 0.0, 1.0)
 	var axis: Vector2 = aim.normalized()
 	var side: Vector2 = axis.orthogonal()
 	var back: Vector2 = axis * (-3.0 * recoil)
