@@ -122,7 +122,7 @@ func update_status(data: Dictionary) -> void:
 	var mounted_extra: int = roundi((float(data.get("mounted_damage", 1.5)) - 1.0) * 100.0)
 	_mount_label.text = "TORRE: queso %+d %% daño" % mounted_extra if mounted else ""
 	_help.text = "Cargar ralentiza.\nTorre: inmune; queso %+d %%.\nTienda sin pausa.\nEntre oleadas: elige y compra." % mounted_extra
-	if not alive: _mount_label.text = "REVIVES EN %.1f s" % float(data.get("respawn_left", 0))
+	if not alive: _mount_label.text = "SIN QUESO · FIN" if phase == "OVER" else "REVIVES EN %.1f s" % float(data.get("respawn_left", 0))
 	var bow: Dictionary = data.get("bow", {})
 	_charge_label.text = "%s · %.2f s" % [str(bow.get("state_label", "LISTO")), float(bow.get("charge", 0))]
 	var color: Color = bow.get("color", CHEESE)

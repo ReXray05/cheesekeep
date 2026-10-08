@@ -52,3 +52,5 @@ Evidencia de reejecución del orquestador:119/0 regresión específica (56 rutas
 La build final se ha abierto en el navegador integrado de Codex mediante HTTP. Menú y partida arrancan; telemetría de PREP marca60FPS tanto al inicio como a los56 segundos de simulación, con65 nodos. El arquero llega por clic a(-70,-20) y cruza la franja trasera hasta(70,-20). Esto mejora la evidencia anterior de Brave automatizado a1FPS, pero no certifica carga máxima ni equilibrio/feel humano. No se ha modificado la cadencia del juego para ocultar el resultado anterior.
 
 Godot4.4.1 portátil encontrado en Descargas y editor abierto con ventana `game.tscn - Cheesekeep — La última corteza - Godot Engine`. El lanzador EDITAR-EN-GODOT.cmd permite reabrirlo y F5 ejecuta el proyecto editable.
+
+Cierre adicional observado en prueba HTTP: al perder el queso ya no se anuncia una reaparición pendiente. Derrota elimina las ratas, proyectiles y pickups; integración78/0 repetida con enemigo vivo y reaparición activa al caer la torre. Export final exit0. La candidata completa se publica en GitHub main; calidad a carga máxima y ajuste humano siguen abiertos.

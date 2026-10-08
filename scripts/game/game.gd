@@ -633,6 +633,7 @@ func _repair() -> void:
 func _game_over() -> void:
 	if phase == "OVER": return
 	phase = "OVER"
+	respawn_left = 0.0
 	feedback.over()
 	wave_manager.active = false
 	bow.reset()
@@ -641,6 +642,9 @@ func _game_over() -> void:
 		if is_instance_valid(arrow):
 			arrow.finish("cleanup",arrow.position)
 	arrows.clear()
+	for enemy in enemies:
+		if is_instance_valid(enemy): enemy.queue_free()
+	enemies.clear()
 	player.clear_actions()
 	if is_instance_valid(pickups): pickups.clear()
 	var retained: Array = Persistence.retain(upgrades.history,economy.coins,int(config.economy.retention_coins))

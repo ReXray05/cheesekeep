@@ -25,3 +25,7 @@ Corregido rodeo tras queso: huella sólida reducida al suelo Rect2(-27,-3,54,28)
 
 Revalidación: suites530/0 y Enemy/Economy PASS; regresión específica119/0,56 rutas entre ocho puntos, franja detrás/diagonales/dash/montaje. Bot cinco oleadas+jefe:52 bajas,queso275,monedas228,cinco excursiones,tres compras; stress80/50/96,325nodos,120ticks299701µs CPU headless. TEST_V2/BALANCE reflejan ajuste efectivo. Root reexporta y actualiza GitHub como RC; publicación no cierra pendientes de rendimiento web real, oclusión/legibilidad360° y valoración humana de feel/diversión.
 
+
+## Cierre de entrega V2, 8 octubre 2026
+
+Fuente y build web publicadas en GitHub main; enlace de juego https://rexray05.github.io/cheesekeep/. V1 sigue recuperable con M13_baseline_v1. Entrega incluye lanzadores para jugar y editar en Godot, documentación y archivo con fuente/build. Ajustes pedidos: paso trasero libre, navegación completa y deslizamiento; espectral56 de daño. 530 checks +119 regresión sin fallos y Enemy/Economy PASS. Cinco oleadas y jefe en ensayo técnico. Navegador integrado:60FPS en PREP y cruce trasero confirmado. Se corrigió además la indicación de reaparición tras perder el queso y se limpian las ratas al terminar. Export final exit0; no se certifican carga máxima, balance avanzado o sensación humana por estos resultados.

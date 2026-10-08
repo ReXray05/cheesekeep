@@ -278,5 +278,8 @@ func combat_contracts(game: Control) -> void:
 	game.resume_game()
 	step(game,respawn+0.01)
 	check(game.player.alive,"Respawn resumes with cheese alive")
+	game._spawn_enemy("basic",Vector2(-70,60))
+	game.player.invulnerable = 0
+	game._attacked("player",10000)
 	game._attacked("tower",10000)
-	check(game.phase == "OVER" and game.arrows.is_empty() and game.pickups.records.is_empty(),"Defeat cleans projectiles and resources")
+	check(game.phase == "OVER" and game.arrows.is_empty() and game.enemies.is_empty() and game.pickups.records.is_empty() and game.respawn_left == 0,"Defeat cleans actors/resources and cancels respawn")
