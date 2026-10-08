@@ -36,3 +36,11 @@ Derrota limpia actores/proyectiles/recursos; la medición de disposal completo v
 ## Gate pendiente
 
 Implementación, suites técnicas y revisión independiente permiten construir RC. Quedan por documentar navegador real/segunda partida, combinaciones de controles y UI, cursor/cámara/oclusiones, audio, persistencia local tras recarga, export reproducible y rendimiento sostenido. Valoración humana de feel/diversión abierta. Solo el orquestador cierra esos gates y publicación con evidencia final; tests headless aprobados no publican V2.
+
+## Revalidación8 de octubre — rodeo y espectral
+
+Source ahora distingue footprint Rect2(-27,-3,54,28) y click visual Rect2(-29,-35,58,62); grafo de navegación Player de seis puntos reemplaza waypoint greedy, marcha usa slide_motion, dash sigue bloqueado. Espectral base/fallback56. Suite `tests/v2_tower_regression.gd`: **119 comprobaciones,0 fallos**; incluye56 rutas dirigidas entre ocho puntos sin penetrar huella, franja trasera caminable, marcha diagonal/deslizamiento, dash sólido e interacción/montaje.
+
+Reejecutadas las suites del cuadro: **530 checks,0 fallos**, Enemy/Economy PASS. Los asserts de posiciones antiguas se sustituyeron por verificar punto fuera de la nueva huella; no se fuerza conservar una colisión de tamaño incorrecto. Las119 comprobaciones nuevas se informan aparte del total530 y de los50 casos históricos previos.
+
+Bot actualizado sin godmode: cinco oleadas+jefe, **52 bajas,queso275,monedas228**, cinco excursiones y tres compras; frames369/513/881/879/1476. Estas cifras sustituyen resultados iniciales para el ajuste8oct; no se combinan partidas. Stress80ratas/50flechas/96packs:325nodos,120ticks/**299701µs** (≈2,50ms/tick CPU headless). Mantener limits de interpretación: sin render web, sinFPSbrowser certificado ni valoración humana. Godot4.4.1 abierto sobre game.tscn confirmado por orquestador; no equivale a playtest completo humano.

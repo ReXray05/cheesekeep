@@ -19,3 +19,9 @@ Hallazgos de revisión corregidos: pérdida de foco estando pausado reanudaba la
 
 Activo orquestador: export web4.4.1 sin hilos, revisión de layout/controles/segunda partida y almacenamiento en navegador; medir rendimiento real y revisar feel humano. Publicación V2 pendiente de esos gates. Build candidata `outputs/web/`, fuente `outputs/project/`; main pública V1 preservada hasta cierre RC. Balance de sesiones largas y comodidad subjetiva permanecen abiertos.
 
+## Actualización8 de octubre — petición del usuario
+
+Corregido rodeo tras queso: huella sólida reducida al suelo Rect2(-27,-3,54,28), zona de clic visual separada, navegación Player por grafo de seis puntos y marcha con deslizamiento. Dash conserva colisión sólida. Espectral base/fallback28→56 (×2), protección intacta. No añadidos sistemas nuevos. Lanzadores EDITAR-EN-GODOT.cmd/Abrir-Godot.ps1 abren Godot4.4.1 portable de Descargas; orquestador confirma editor en `game.tscn - Cheesekeep`, F5 ejecuta proyecto.
+
+Revalidación: suites530/0 y Enemy/Economy PASS; regresión específica119/0,56 rutas entre ocho puntos, franja detrás/diagonales/dash/montaje. Bot cinco oleadas+jefe:52 bajas,queso275,monedas228,cinco excursiones,tres compras; stress80/50/96,325nodos,120ticks299701µs CPU headless. TEST_V2/BALANCE reflejan ajuste efectivo. Root reexporta y actualiza GitHub como RC; publicación no cierra pendientes de rendimiento web real, oclusión/legibilidad360° y valoración humana de feel/diversión.
+

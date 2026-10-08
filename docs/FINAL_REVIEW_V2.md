@@ -38,3 +38,11 @@ El recorrido indicado no certifica audición, todas las combinaciones de control
 - Ajustar balance/feel solo con observaciones reproducibles. Mantener etiqueta RC y estos límites hasta completar evidencia.
 
 La revisión técnica no encuentra motivo para rehacer arquitectura o añadir sistemas. La publicación autorizada de una candidata puede continuar con este dictamen, conservando V1 recuperable y documentación honesta; los gates pendientes no se marcan aprobados por publicar.
+
+## Addendum8 de octubre — ajuste solicitado
+
+Revisado diff read-only tras petición de quitar atasco detrás del queso y duplicar espectral. La huella Rect2(-27,-3,54,28) ocupa solo suelo; TOWER_CLICK_RECT mantiene región visual previa. Navegación Player de seis puntos reemplaza greedy que podía quedarse en esquina; slide_motion permite deslizamiento de marcha, mientras dash sigue constrain_motion. Espectral base/fallback56, crítico falso y protección intacta. No nuevos defectos altos confirmados en fuente revisada. Posibles oclusiones de ratas detrás del queso permanecen criterio visual pendiente, no confundir huella libre con render aprobado.
+
+Evidencia de reejecución del orquestador:119/0 regresión específica (56 rutas entre ocho puntos y casos franja/diagonal/dash/montaje); suites530/0 y Enemy/Economy PASS con asserts basados en nueva huella, sin conservar coordenadas obsoletas. Bot nuevo cinco oleadas+jefe52bajas,queso275,monedas228,cinco excursiones,tres compras. Stress120ticks299701µs CPU headless/325nodos, sin afirmarFPSweb. Editor Godot4.4.1 portable confirmado abierto sobre game.tscn; acceso F5 mediante lanzador nuevo. No se usa esa apertura como evidencia de audición o feel humano.
+
+**Se mantiene GO para RC técnica del ajuste y actualización autorizada de GitHub; rendimiento web sostenido y evaluación humana permanecen pendientes.** El addendum corresponde al diff posterior a2d5aa57, cuyos cambios de source/build cerrará en commit el orquestador. Documentación no publica por sí misma ni cambia el dictamen de calidad previo.

@@ -48,6 +48,8 @@ Al perder se conservan automáticamente `floor(adquisiciones × clamp(monedas / 
 
 Importa `project.godot` en Godot 4.4.1 y ejecuta la escena principal con F6 o el proyecto con F5. La principal es `scenes/game/game.tscn`; `scenes/game/prototype.tscn`, si está incluida, contiene la prueba aislada del arco. La build web final se encuentra en `../web/`.
 
+En Windows puedes abrir la fuente con **`EDITAR-EN-GODOT.cmd`**, incluido junto a `project.godot` y también en la carpeta de entrega. El lanzador `Abrir-Godot.ps1` usa Godot4.4.1 portable de Descargas; no requiere instalar otro editor. Abre `game.tscn` para ver la escena y pulsa **F5** para jugar el proyecto. Ajusta cifras en los JSON de `data/`; el juego publicado necesita reexportarse después de modificar la fuente. El orquestador confirmó el editor abierto con el proyecto Cheesekeep.
+
 La raíz en `scripts/game/game.gd` coordina el estado y la integración. Controladores y presentación se separan para arquero, arco, flechas y ratas. Las oleadas, economía, mejoras, persistencia y HUD tienen módulos propios. El campo usa un SubViewport de 360 × 360 ampliado a 720 × 720, con paneles laterales en una ventana lógica de 1152 × 720. El tick de gameplay es coordinado por la raíz.
 
 Edita `data/balance.json` para arco, arquero, torre, economía y límites; `data/enemies.json` para las cinco ratas; `data/waves.json` para ritmo y aparición; `data/upgrades.json` para ramas y efectos. Los recursos gráficos y su procedencia se documentan junto a los assets y en los informes del proyecto.
@@ -60,6 +62,8 @@ La entrega incluye plantillas web sin hilos de Godot 4.4.1 en `../export_templat
 
 Los diagnósticos se ejecutan con Godot, por ejemplo `godot --headless --path . --script tests/v2_integration.gd`. V2 registra 530 comprobaciones sin fallos, suite Enemy/Economy aprobada y 50 casos de geometría; véase `docs/TEST_V2.md` y `docs/CODE_REVIEW_V2.md`. Las pruebas incluyen recuperación sin recursos, pausa/foco, cinco oleadas con jefe, migración y límites de objetos. Los informes V1 `docs/CORE_GATE.md`, `docs/MVP_PLAYTEST.md`, `docs/TEST_CORE.md`, `docs/TEST_SYSTEMS.md` y `docs/TEST_INTEGRATION.md` se conservan como historia. Los tests no prueban por sí solos diversión, calidad de audio ni rendimiento web sostenido.
 
+Ajuste del8 de octubre: huella sólida limitada al suelo, rodeo completo del queso con clic y deslizamiento al caminar con WASD; la zona visual de clic torre conserva tamaño. Espectral base **56 de daño**, el doble del valor V2 inicial28, con protección enemiga intacta. Regresión específica **119 comprobaciones sin fallos**, además de la reejecución de las suites V2; F5 permite probar el ajuste directamente en Godot.
+
 Esta entrega mantiene un alcance compacto: cinco tipos de ratas (básica, rápida, escudada, pesada y jefe), veinte mejoras y una arena. No incluye campaña, multijugador, inventario ni ejecutable nativo. El balance de largas sesiones y las invocaciones de jefes requieren seguimiento adicional. Los límites de objetos y mediciones CPU headless no equivalen a una garantía de FPS web. El gate de navegador, rendimiento sostenido y valoración humana de V2 permanece pendiente hasta documentar su ejecución.
 
 La documentación de diseño y mantenimiento está en `docs/`: GAME_VISION, SPEC, ARCHITECTURE, PLAN, PLAN_REVIEW, PROGRESS y BALANCE.
@@ -67,4 +71,5 @@ La documentación de diseño y mantenimiento está en `docs/`: GAME_VISION, SPEC
 ## Cambios de versión
 
 - V2: aim estable, vuelo independiente del indicador para verde+, huella sólida compartida, cámara suave; melee/dash, recursos físicos y recuperación sin munición; carga morada y rotura determinista; controles configurables, preferencias persistentes, menú/pausa/ayuda/splash y árbol con veinte mejoras. Implementación y tests técnicos completos; gates web y experiencia humana pendientes.
+- V2, ajuste8oct: se reduce colisión al pie del queso, se sustituye rodeo greedy por grafo de navegación y se permite deslizamiento de marcha; dash conserva bloqueo sólido. Espectral28→56. Editor portable y lanzador de fuente incluidos.
 - V1 / M13: versión publicada preservada, combate de ratón, doce mejoras, monedas por baja automáticas, carga roja con riesgo aleatorio y vuelo limitado por indicador. Sus informes originales siguen en `docs/`.

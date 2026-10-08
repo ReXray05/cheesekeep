@@ -103,7 +103,7 @@ Reglas elegidas documentadas en SPEC/GAME_VISION V2; cifras de abajo son ajustab
 | Sistema | Inicial V2 |
 | --- | --- |
 | Verde | 0,85–0,98s, crítico rompe protección |
-| Morado | 1,55–1,67s, daño28, velocidad420, semiancho18, atraviesa todas una vez |
+| Morado | 1,55–1,67s, daño56 desde8oct (antes28), velocidad420, semiancho18, atraviesa todas una vez |
 | Rotura | 1,85s garantizada, recuperación1,5s, aviso rojo previo |
 | Melee | daño12, alcance32, ángulo110°, cooldown0,45s, animación0,18s, empuje14 |
 | Recompensa melee | monedas normales físicas y 2 flechas físicas garantizadas |
@@ -143,4 +143,10 @@ Fuente: `data/upgrades.json` de la candidata2d5aa57. **20 IDs distintos,40 rango
 | field_repair / Reserva de corteza | repair | 1 | Reparación +20HP y precio −3monedas, mínimo1; se suma a rangos de repair |
 
 Casos relevantes de migración: steady_string conserva ID/rango pero sustituye reducción probabilística de rotura por margen determinista; fast_draw conserva ID/rango y escala también ventanas moradas y límite de rotura. Pulso espectral extiende fin de morado y límite juntos, evitando consumir todo el rojo final. Estas especializaciones cambian corredor/tiempos/barrido/recogida; no añaden botones o recursos nuevos.
+
+## Ajuste solicitado8 de octubre
+
+Espectral base **56**, el doble de28, tanto en balance.json como fallbacks Bow/UpgradeManager. Punta afilada sigue multiplicándolo ×1,12 por rango; espectral sigue no crítico y protección reduce daño a25% (base56→14), mientras verde rompe protección. No cambiar ancho, munición consumida, ventana ni hit por ID. La recuperación sigue solo al fallar todos los enemigos.
+
+Geometría sólida efectiva: **Rect2(-27,-3,54,28)**, solo huella del suelo; clic torre conserva **Rect2(-29,-35,58,62)** que cubre imagen elevada. Player usa navegación por grafo de seis puntos para rodeo de clic y `slide_motion` para marcha/WASD. Dash/embestida/empuje mantienen barrido contra sólidos; no adquieren atravesar torre. Contacto Enemy/pickups comparte huella nueva. La franja detrás del sprite elevada queda caminable, sin convertir toda la imagen en pared. Oclusión visual y comodidad deben confirmarse jugando; corrección física no las certifica.
 
