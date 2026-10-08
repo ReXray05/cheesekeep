@@ -46,3 +46,9 @@ Revisado diff read-only tras petición de quitar atasco detrás del queso y dupl
 Evidencia de reejecución del orquestador:119/0 regresión específica (56 rutas entre ocho puntos y casos franja/diagonal/dash/montaje); suites530/0 y Enemy/Economy PASS con asserts basados en nueva huella, sin conservar coordenadas obsoletas. Bot nuevo cinco oleadas+jefe52bajas,queso275,monedas228,cinco excursiones,tres compras. Stress120ticks299701µs CPU headless/325nodos, sin afirmarFPSweb. Editor Godot4.4.1 portable confirmado abierto sobre game.tscn; acceso F5 mediante lanzador nuevo. No se usa esa apertura como evidencia de audición o feel humano.
 
 **Se mantiene GO para RC técnica del ajuste y actualización autorizada de GitHub; rendimiento web sostenido y evaluación humana permanecen pendientes.** El addendum corresponde al diff posterior a2d5aa57, cuyos cambios de source/build cerrará en commit el orquestador. Documentación no publica por sí misma ni cambia el dictamen de calidad previo.
+
+## Verificación HTTP del ajuste (8 octubre 2026)
+
+La build final se ha abierto en el navegador integrado de Codex mediante HTTP. Menú y partida arrancan; telemetría de PREP marca60FPS tanto al inicio como a los56 segundos de simulación, con65 nodos. El arquero llega por clic a(-70,-20) y cruza la franja trasera hasta(70,-20). Esto mejora la evidencia anterior de Brave automatizado a1FPS, pero no certifica carga máxima ni equilibrio/feel humano. No se ha modificado la cadencia del juego para ocultar el resultado anterior.
+
+Godot4.4.1 portátil encontrado en Descargas y editor abierto con ventana `game.tscn - Cheesekeep — La última corteza - Godot Engine`. El lanzador EDITAR-EN-GODOT.cmd permite reabrirlo y F5 ejecuta el proyecto editable.
