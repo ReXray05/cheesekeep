@@ -72,7 +72,7 @@ func apply_acquisition(id: String) -> void:
 func rebuild(base: Dictionary) -> Dictionary:
 	var result: Dictionary = base.duplicate(true)
 	# Add V2 defaults before effects so migrated V1 files remain meaningful.
-	var bow_defaults: Dictionary = {"spectral_start":1.55,"spectral_end":1.67,"break_time":1.85,"spectral_damage":28.0,"spectral_half_width":18.0}
+	var bow_defaults: Dictionary = {"spectral_start":1.55,"spectral_end":1.67,"break_time":1.85,"spectral_damage":56.0,"spectral_half_width":18.0}
 	var player_defaults: Dictionary = {"melee_range":32.0,"melee_angle":110.0,"melee_damage":12.0,"melee_knockback":14.0,"melee_cooldown":0.45,"melee_duration":0.18,"dash_distance":75.0,"dash_duration":0.18,"dash_cooldown":1.0,"dash_iframes":0.08,"collect_radius":12.0,"magnet_radius":12.0}
 	for group: String in ["bow", "player"]:
 		var defaults: Dictionary = bow_defaults if group == "bow" else player_defaults

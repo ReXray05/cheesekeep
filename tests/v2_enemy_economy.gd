@@ -37,7 +37,7 @@ func _initialize() -> void:
 	manager.clear()
 	manager.spawn_pickup("coin", 1, Vector2(-60, 0))
 	manager.tick(1.0, Vector2(60, 0), true, 12.0, 150.0)
-	assert(manager.records.size() == 1 and manager.records[0].at.x < -31)
+	assert(manager.records.size() == 1 and not Geometry.TOWER_RECT.grow(3).has_point(manager.records[0].at))
 	manager.clear()
 	economy.coins = 0
 	economy.ammo = 0
@@ -85,7 +85,7 @@ func _initialize() -> void:
 	tank.dash_direction = Vector2.RIGHT
 	tank.dash_left = 1.0
 	tank.tick(1.0, Vector2(80,0), Vector2.ZERO, false, true)
-	assert(tank.position.x < -41 and tank.dash_left == 0)
+	assert(not Geometry.TOWER_RECT.grow(tank.radius).has_point(tank.position) and tank.dash_left == 0)
 	tank.free()
 	manager.free()
 	print("PASS V2 enemy/economy: protected zero-resource melee recovery, unique death source, exact cap sums, mounted gate, no expiry, reachable miss, tower magnet block, 360 contact, opposite chase detour, swept charge/knockback")

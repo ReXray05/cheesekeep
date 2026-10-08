@@ -43,7 +43,7 @@ func run_tests() -> void:
 	bow.release(Vector2(0.6, 0.8))
 	var spectral: Dictionary = shots.back()
 	check(spectral.spectral and not spectral.critical and spectral.pierce == -1, "Spectral is unlimited noncritical")
-	check(is_equal_approx(spectral.damage, 28.0) and is_equal_approx(spectral.speed, 420.0) and is_equal_approx(spectral.half_width, 18.0), "Spectral tuning")
+	check(is_equal_approx(spectral.damage, 56.0) and is_equal_approx(spectral.speed, 420.0) and is_equal_approx(spectral.half_width, 18.0), "Spectral tuning")
 	check(spectral.direction.is_equal_approx(Vector2(0.6, 0.8)), "Spectral central aim has no hidden dispersion")
 	for fps: int in [30, 60, 144]:
 		bow.reset()

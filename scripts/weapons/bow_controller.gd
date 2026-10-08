@@ -109,7 +109,7 @@ func snapshot() -> Dictionary:
 		tint = Color("ff535b")
 		label = "PELIGRO" if current != "final" else "¡ROTURA!"
 	if spectral:
-		power = value("spectral_damage", 28)
+		power = value("spectral_damage", 56)
 		arrow_speed = value("spectral_speed", 420)
 		width = value("spectral_half_width", 18)
 		tint = Color("cf8bff")

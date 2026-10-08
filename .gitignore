@@ -1,3 +1,5 @@
 .godot/
 *.tmp
 export_templates/
+
+web/*.import

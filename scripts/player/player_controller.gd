@@ -22,8 +22,6 @@ var actor_radius: float = 7.0
 var movement_input: Vector2 = Vector2.ZERO
 var direct_movement: bool = false
 var dash_steering: Vector2 = Vector2.ZERO
-var _detour: Vector2 = Vector2.ZERO
-var _has_detour: bool = false
 var dash_left: float = 0.0
 var dash_cooldown: float = 0.0
 var dash_direction: Vector2 = Vector2.RIGHT
@@ -71,10 +69,9 @@ func _dismount() -> void:
 	destination = position
 
 func go_to(point: Vector2) -> void:
-	_has_detour = false
 	if not alive:
 		return
-	wants_tower = tower_enabled and Geometry.TOWER_RECT.has_point(point)
+	wants_tower = tower_enabled and Geometry.TOWER_CLICK_RECT.has_point(point)
 	if mounted:
 		if wants_tower:
 			_dismount()
@@ -164,26 +161,11 @@ func tick(delta: float, charging: bool) -> void:
 	var step: float = speed * (charging_slow if charging else 1.0) * (value("melee_slow", 0.65) if melee_left > 0.0 else 1.0) * delta
 	if direct_movement and movement_input.is_zero_approx() and not wants_tower:
 		return
-	if _has_detour and position.distance_to(_detour) < 1.0:
-		_has_detour = false
-	var target: Vector2 = _detour if _has_detour else destination
+	var target: Vector2 = destination
+	if tower_enabled and not direct_movement and not wants_tower:
+		target = Geometry.navigation_target(position, destination, actor_radius)
 	var next: Vector2 = position + movement_input * step if direct_movement and not wants_tower else position.move_toward(target, step)
-	var safe: Vector2 = Geometry.constrain_motion(position, next, actor_radius, tower_enabled)
-	# Persist one visible perimeter waypoint; do not switch sides every tick.
-	if safe.distance_to(next) > 0.1 and not direct_movement and not wants_tower:
-		var rect: Rect2 = Geometry.TOWER_RECT.grow(actor_radius + 2.0)
-		var corners: Array[Vector2] = [rect.position, Vector2(rect.end.x,rect.position.y),rect.end,Vector2(rect.position.x,rect.end.y)]
-		var best: float = INF
-		for corner in corners:
-			if position.distance_to(corner) < 1.0 or Geometry.constrain_motion(position,corner,actor_radius,true).distance_to(corner) > 0.1:
-				continue
-			var score: float = position.distance_to(corner) + corner.distance_to(destination)
-			if score < best:
-				best = score
-				_detour = corner
-				_has_detour = true
-		if _has_detour:
-			safe = Geometry.constrain_motion(position, position.move_toward(_detour,step), actor_radius,tower_enabled)
+	var safe: Vector2 = Geometry.slide_motion(position, next, actor_radius, tower_enabled)
 	moving = position.distance_to(safe) > 0.01
 	position = safe
 
